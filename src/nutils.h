@@ -1,5 +1,5 @@
-#ifndef NUTILS_
-#define NUTILS_
+#ifndef NUTILS_H
+#define NUTILS_H
 
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
