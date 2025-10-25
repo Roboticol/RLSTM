@@ -7,29 +7,21 @@
 #include "nutils.h"
 
 int main() {
+	init_utils();
 	int data[] = {5,6,9,1,2,6,4,3,2};
-	testfunc();		
+	
+	gsl_vector *v = gsl_vector_calloc(5);
 
-	gsl_vector *a = gsl_vector_calloc(3);
-	gsl_vector *b = gsl_vector_calloc(2);
-
-	gsl_vector_set(a, 0, 2);
-	gsl_vector_set(a, 1, 1);
-	gsl_vector_set(a, 2, 0.23);
-
-	gsl_vector_set(b, 0, 2.58);
-	gsl_vector_set(b, 1, 3.23);
-
-	gsl_vector *c = concatenate_vector(a, b);
-	print_vector(c);
-	sigmoid_vector(c, c);
-	print_vector(c);
+	randomize_vector(v, 1, 5);
+	print_vector(v);
+	randomize_vector(v, 1, 5);
+	print_vector(v);
 
 	printf("\n");
+	gsl_matrix *m = create_rand_matrix(5,2,1,100);
+	print_matrix(m);
 
-	gsl_vector_free(c);
-	gsl_vector_free(b);
-	gsl_vector_free(a);
-	
+	gsl_matrix_free(m);
+	gsl_vector_free(v);
 	return 0;
 }

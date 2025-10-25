@@ -44,15 +44,15 @@ typedef struct {
 	gsl_vector *o;
 	gsl_vector *ca; // candidate vector
 	
-	// output vectors
+	// output vectorsran
 	gsl_vector *h;
 	gsl_vector *c;
 } LSTM;
 
 // lstm functions
-LSTM* create_lstm(); // (ONLY USE THESE FUNCTION FOR CREATING LSTMS) create lstm with all values initialized to 0;
-void randomize_lstm(); // initialize LSTM with random values
-LSTM* create_rand_lstm(); // create LSTM with random values;
+LSTM* create_lstm(int input_dim, int hidden_dim); // (ONLY USE THESE FUNCTION FOR CREATING LSTMS) create lstm with all values initialized to 0;
+void randomize_lstm(LSTM* lstm, int range1, int range2); // initialize LSTM with random values in a range
+LSTM* create_rand_lstm(int input_dim, int hidden_dim, int range1, int range2); // create LSTM with random values
 void free_lstm(LSTM* lstm); // delete lstm
 
 // general gate function

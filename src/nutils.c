@@ -1,8 +1,15 @@
 #include <stdio.h>
 #include <math.h>
-#include "nutils.h"
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
+#include <stdlib.h>
+#include <time.h>
+#include "nutils.h"
+
+void init_utils() {
+	// initializes the randomizer
+	srand(time(NULL));
+}
 
 double sigmoid(double n) {
     return (1 / (1 + pow(EULER_NUMBER, -n)));
@@ -14,6 +21,7 @@ gsl_vector *concatenate_vector(gsl_vector *a, gsl_vector *b) {
 
 	int size = asize + bsize;
 
+	// create vector to be returned
 	gsl_vector *v = gsl_vector_calloc(size);
 
 	for (int i = 0; i < size; i++) {
@@ -33,7 +41,7 @@ void *sigmoid_vector(gsl_vector *v, gsl_vector *r) {
 
 void print_vector(gsl_vector *v) {
 	for (int i = 0; i < v->size; i++) {
-		printf("%lf ", gsl_vector_get(v, i));
+		printf("%.3lf ", gsl_vector_get(v, i));
 	}
 	printf("\n");
 }
@@ -41,9 +49,44 @@ void print_vector(gsl_vector *v) {
 void print_matrix(gsl_matrix *m) {
 	for (int i = 0; i < m->size1; i++) {
 		for (int j = 0; j < m->size2; j++) {
-			printf("%lf ", gsl_matrix_get(m, i, j));
+			printf("%.3lf ", gsl_matrix_get(m, i, j));
 		}
 		printf("\n");
 	}
 	printf("\n");
+}
+
+double random_double(double range1, double range2) {
+	return range1 + ((double)rand() / (RAND_MAX / (range2 - range1)));
+}
+
+void randomize_vector(gsl_vector *x, double range1, double range2) {
+	int size = x->size;
+
+	for (int i = 0; i < size; i++) {
+		gsl_vector_set(x, i, random_double(range1, range2));
+	}
+}
+
+void randomize_matrix(gsl_matrix *x, double range1, double range2) {
+	int rows = x->size1;
+	int cols = x->size2;
+
+	for (int i = 0; i < rows; i++) {
+		for (int j = 0; j < cols; j++) {
+			gsl_matrix_set(x, i, j, random_double(range1, range2));
+		}
+	}
+}
+
+gsl_vector *create_rand_vector(int size, double range1, double range2) {
+	gsl_vector *v = gsl_vector_alloc(size);
+	randomize_vector(v, range1, range2);
+	return v;
+}
+
+gsl_matrix *create_rand_matrix(int size1, int size2, double range1, double range2) {
+	gsl_matrix *m = gsl_matrix_alloc(size1, size2);
+	randomize_matrix(m, range1, range2);
+	return m;
 }
