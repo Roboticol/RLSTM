@@ -15,30 +15,33 @@ double sigmoid(double n) {
     return (1 / (1 + pow(EULER_NUMBER, -n)));
 }
 
-gsl_vector *concatenate_vector(gsl_vector *a, gsl_vector *b) {
+void concatenate_vector(gsl_vector *a, gsl_vector *b, gsl_vector *r) {
 	int asize = a->size;
 	int bsize = b->size;
 
 	int size = asize + bsize;
 
-	// create vector to be returned
-	gsl_vector *v = gsl_vector_calloc(size);
-
 	for (int i = 0; i < size; i++) {
-		if(i < asize) gsl_vector_set(v, i, gsl_vector_get(a, i));
-		else gsl_vector_set(v, i, gsl_vector_get(b, i-asize));
-	}
-	
-	return v;
+		if(i < asize) gsl_vector_set(r, i, gsl_vector_get(a, i));
+		else gsl_vector_set(r, i, gsl_vector_get(b, i-asize));
+	}	
 }
 
-void *sigmoid_vector(gsl_vector *v, gsl_vector *r) {
+void sigmoid_vector(gsl_vector *v, gsl_vector *r) {
 	int size = v->size;
 	for (int i = 0; i < size; i++) {
 		gsl_vector_set(r, i, sigmoid(gsl_vector_get(v, i)));
 	}
 }
 
+void hdm_vector(gsl_vector *a, gsl_vector *b, gsl_vector *r) {
+	int size = a->size;
+
+	for (int i = 0; i < size; i++) {
+		gsl_vector_set(r, i, gsl_vector_get(a, i) * gsl_vector_get(b, i));
+	}
+}
+		
 void print_vector(gsl_vector *v, char *s) {
 	printf("%s", s);
 	for (int i = 0; i < v->size; i++) {

@@ -9,8 +9,9 @@
 
 void init_utils(); // initialize utilities
 double sigmoid(double n); // calculate sigmoid
-void *sigmoid_vector(gsl_vector *v, gsl_vector *r); // calculate sigmoid of vector (outputs to r)
-gsl_vector *concatenate_vector(gsl_vector *a, gsl_vector *b); // combine (concatenate) two vectors
+void sigmoid_vector(gsl_vector *v, gsl_vector *r); // calculate sigmoid of vector (outputs to r)
+void concatenate_vector(gsl_vector *a, gsl_vector *b, gsl_vector *r); // combine (concatenate) two vectors
+void hdm_vector(gsl_vector *a, gsl_vector *b, gsl_vector *r); // get hadamard product of two vectors a and b and output to r
 
 // utilities for printing 
 void print_vector(gsl_vector *v, char *s); 

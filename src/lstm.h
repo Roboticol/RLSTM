@@ -9,6 +9,8 @@
 // c = cell state vector
 // res = resultant vector
 //
+// in gate and other functions, which are used by the lstm and can be used by the user to test different equations i.e gate(...) and cstate_eq(...), the parameters for input have the suffix i and output have the suffix o.
+//
 // read more information in: https://en.wikipedia.org/wiki/Long_short-term_memory
 
 // for testing
@@ -51,18 +53,27 @@ typedef struct {
 
 // lstm functions
 LSTM* create_lstm(int input_dim, int hidden_dim); // (ONLY USE THESE FUNCTION FOR CREATING LSTMS) create lstm with all values initialized to 0;
-void randomize_lstm(LSTM *lstm, double range1m, double range2m, double range1v, double range2v); // initialize LSTM with random values in a range. pre-requisite: all objects inside the struct should already be initialized.
-LSTM* create_rand_lstm(int input_dim, int hidden_dim, double range1m, double range2m, double range1v, double range2v); // create LSTM with random values. This creates objects within the struct too.
 void free_lstm(LSTM* lstm); // delete lstm
 void print_lstm(LSTM* lstm); // print lstm's contents
+
+// randomize functions
+void randomize_lstm(LSTM *lstm, double range1m, double range2m, double range1v, double range2v); // initialize LSTM with random values in a range. pre-requisite: all objects inside the struct should already be initialized.
+LSTM* create_rand_lstm(int input_dim, int hidden_dim, double range1m, double range2m, double range1v, double range2v); // create LSTM with random values. This creates objects within the struct too. (ONLY RANDOMIZES WEIGHTS AND BIASES!)
+LSTM *randomize_in_lstm(LSTM *lstm, double range1, double range2); // randomize lstm's inputs
 
 // general gate function
 void gate(gsl_matrix *wi, gsl_matrix *ui, gsl_vector *bi, gsl_vector *xi, gsl_vector *hi, gsl_vector *fo);
 
 // gate functions
-void forget_gate(LSTM *lstm);
-void input_gate(LSTM *lstm);
-void output_gate(LSTM *lstm);
-void candidate_gate(LSTM *lstm);
+void forget_gate_lstm(LSTM *lstm);
+void input_gate_lstm(LSTM *lstm);
+void output_gate_lstm(LSTM *lstm);
+void candidate_gate_lstm(LSTM *lstm);
+
+// other equation functions
+void cstate_eq(gsl_vector *fi, gsl_vector *cpi, gsl_vector *ii, gsl_vector *cai, gsl_vector *co); // for cell state equation
+void hstate_eq(gsl_vector *oi, gsl_vector *ci, gsl_vector *ho); // for hidden state equation
+void cstate_eq_lstm(LSTM *lstm);
+void hstate_eq_lstm(LSTM *lstm);
 
 #endif

@@ -46,8 +46,6 @@ void gate(gsl_matrix *wi, gsl_matrix *ui, gsl_vector *bi, gsl_vector *xi, gsl_ve
 	int input_dim = xi->size;
 	int hidden_dim = hi->size;
 
-	int concatsize = input_dim + hidden_dim;
-
 	// Vector initialization
 	gsl_vector *wixi = gsl_vector_calloc(hidden_dim);
 	gsl_vector *uihi = gsl_vector_calloc(hidden_dim);
@@ -57,7 +55,7 @@ void gate(gsl_matrix *wi, gsl_matrix *ui, gsl_vector *bi, gsl_vector *xi, gsl_ve
 	gsl_blas_dgemv(CblasNoTrans, 1, ui, hi, 0, uihi);
 
 	// Vector addition
-	gsl_blas_daxpy(1, wixi, uihi);
+	gsl_blas_daxpy(1, wixi, uihi); // adding to uihi because it will be deleted anyway
 	gsl_blas_daxpy(1, bi, uihi);
 
 	// Final sigmoid result
@@ -76,10 +74,10 @@ LSTM *create_lstm(int input_dim, int hidden_dim) {
 	if (lstm == NULL) printf("ERROR: FAILED TO ALLOCATE LSTM STRUCT!\n");
 
 	// matrices
-	lstm->wf = gsl_matrix_calloc(input_dim, hidden_dim);
-	lstm->wi = gsl_matrix_calloc(input_dim, hidden_dim);
-	lstm->wo = gsl_matrix_calloc(input_dim, hidden_dim);
-	lstm->wc = gsl_matrix_calloc(input_dim, hidden_dim);
+	lstm->wf = gsl_matrix_calloc(hidden_dim, input_dim);
+	lstm->wi = gsl_matrix_calloc(hidden_dim, input_dim);
+	lstm->wo = gsl_matrix_calloc(hidden_dim, input_dim);
+	lstm->wc = gsl_matrix_calloc(hidden_dim, input_dim);
 
 	lstm->uf = gsl_matrix_calloc(hidden_dim, hidden_dim);
 	lstm->ui = gsl_matrix_calloc(hidden_dim, hidden_dim);
@@ -166,25 +164,31 @@ void randomize_lstm(LSTM *lstm, double range1m, double range2m, double range1v, 
 	randomize_vector(lstm->bc, range1v, range2v);
 
 	// input vectors
-	randomize_vector(lstm->x, range1v, range2v);
-	randomize_vector(lstm->hp, range1v, range2v); // h(t-1) vector
-	randomize_vector(lstm->cp, range1v, range2v);
+	// randomize_vector(lstm->x, range1v, range2v);
+	// randomize_vector(lstm->hp, range1v, range2v); // h(t-1) vector
+	// randomize_vector(lstm->cp, range1v, range2v);
 	
 	// intermediate vectors (these are used within the LSTM)
-	randomize_vector(lstm->f, range1v, range2v);
-	randomize_vector(lstm->i, range1v, range2v);
-	randomize_vector(lstm->o, range1v, range2v);
-	randomize_vector(lstm->ca, range1v, range2v); // candidate vector
+	// randomize_vector(lstm->f, range1v, range2v);
+	// randomize_vector(lstm->i, range1v, range2v);
+	// randomize_vector(lstm->o, range1v, range2v);
+	// randomize_vector(lstm->ca, range1v, range2v); // candidate vector
 	
 	// output vectors
-	randomize_vector(lstm->h, range1v, range2v);
-	randomize_vector(lstm->c, range1v, range2v);
+	// randomize_vector(lstm->h, range1v, range2v);
+	// randomize_vector(lstm->c, range1v, range2v);
 }
 
 LSTM *create_rand_lstm(int input_dim, int hidden_dim, double range1m, double range2m, double range1v, double range2v) {
 	LSTM *lstm = create_lstm(input_dim, hidden_dim);
 	randomize_lstm(lstm, range1m, range2m, range1v, range2v);
 	return lstm;
+}
+
+void randomize_in_lstm(LSTM *lstm, double range1, double range2) {
+	randomize_vector(lstm->x, range1, range2);
+	randomize_vector(lstm->hp, range1, range2);
+	randomize_vector(lstm->cp, range1, range2);
 }
 
 void print_lstm(LSTM* lstm) {	
@@ -230,21 +234,70 @@ void print_lstm(LSTM* lstm) {
 }
 
 
-void forget_gate(LSTM *lstm) {
+void forget_gate_lstm(LSTM *lstm) {
 	gate(lstm->wf, lstm->uf, lstm->bf, lstm->x, lstm->hp, lstm->f);
 }
 
-void input_gate(LSTM *lstm) {
+void input_gate_lstm(LSTM *lstm) {
 	gate(lstm->wi, lstm->ui, lstm->bi, lstm->x, lstm->hp, lstm->i);
 }
 
-void output_gate(LSTM *lstm) {
+void output_gate_lstm(LSTM *lstm) {
 	gate(lstm->wo, lstm->uo, lstm->bo, lstm->x, lstm->hp, lstm->o);
 }
 
 // cell input activation vector gate
-void candidate_gate(LSTM *lstm) {
+void candidate_gate_lstm(LSTM *lstm) {
 	gate(lstm->wc, lstm->uc, lstm->bc, lstm->x, lstm->hp, lstm->ca);
+}
+
+void cstate_eq(gsl_vector *fi, gsl_vector *cpi, gsl_vector *ii, gsl_vector *cai, gsl_vector *co) {
+	// formula used: fi * cpi + ii * cai ( * = hadamard product)
+	// initialize vectors
+	gsl_vector *hdm1 = gsl_vector_calloc(fi->size);	
+	gsl_vector *hdm2 = gsl_vector_calloc(fi->size);	
+	
+	// hadarmard product of vectors
+	hdm_vector(fi, cpi, hdm1);
+	hdm_vector(ii, cai, hdm1);
+
+	// addition of vectors
+	gsl_blas_daxpy(1, hdm1, hdm2);
+
+	// copying into resultant vector
+	gsl_blas_dcopy(hdm2, co);
+
+	// memory safety steps
+	gsl_vector_free(hdm1);
+	gsl_vector_free(hdm2);
+}
+
+void hstate_eq(gsl_vector *oi, gsl_vector *ci, gsl_vector *ho) {
+	// formula used: oi * sigmoid(ci) ( * = hadamard product)
+	// initialize vectors
+	gsl_vector *v = gsl_vector_calloc(oi->size);
+	gsl_vector *s = gsl_vector_calloc(oi->size);
+
+	// sigmoid of vector
+	sigmoid_vector(ci, s);
+
+	// getting product
+	hdm_vector(oi, s, v);
+	
+	// copying over to resultant vector
+	gsl_blas_dcopy(v, ho);
+
+	// memory safety steps
+	gsl_vector_free(v);	
+	gsl_vector_free(s);
+}
+
+void cstate_eq_lstm(LSTM *lstm) {
+	cstate_eq(lstm->f, lstm->cp, lstm->i, lstm->ca, lstm->c);
+}
+
+void hstate_eq_lstm(LSTM *lstm) {
+	hstate_eq(lstm->o, lstm->c, lstm->h);
 }
 
 void testfunc() {
