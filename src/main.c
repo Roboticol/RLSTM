@@ -9,11 +9,18 @@
 int main() {
 	init_utils();
 
-	LSTM* l = create_rand_lstm(2,5,-1,1,-1,1);
+	int inp_dim = 1;
+	int hidden_dim = 2;
+	LSTM* l = create_rand_lstm(inp_dim,hidden_dim,-1,1,-1,1);
 
-	int n = 10;
-	gsl_vector **v = series_vectors(3, n, 1, 100, -10, 10);
-	print_series_vectors(v, n, "series: ");
+	int n = 6;
+	gsl_vector **v = series_vectors(inp_dim, n, 1, 100, -10, 10);
+	print_series_vectors(v, n, "Vector series: ");
+
+	forward_pass_n_lstm(l, v, n);
+
+	print_lstm(l);	
+
 	free_series_vectors(v, n);
 	free_lstm(l);
 

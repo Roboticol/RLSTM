@@ -45,7 +45,7 @@ void hdm_vector(gsl_vector *a, gsl_vector *b, gsl_vector *r) {
 void print_vector(gsl_vector *v, char *s) {
 	printf("%s", s);
 	for (int i = 0; i < v->size; i++) {
-		printf("%.3lf ", gsl_vector_get(v, i));
+		printf("%.2lf ", gsl_vector_get(v, i));
 	}
 	printf("\n");
 }
@@ -54,7 +54,7 @@ void print_matrix(gsl_matrix *m, char *s) {
 	printf("%s\n", s);
 	for (int i = 0; i < m->size1; i++) {
 		for (int j = 0; j < m->size2; j++) {
-			printf("%.3lf ", gsl_matrix_get(m, i, j));
+			printf("%.2lf ", gsl_matrix_get(m, i, j));
 		}
 		printf("\n");
 	}

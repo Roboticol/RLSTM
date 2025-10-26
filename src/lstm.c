@@ -186,6 +186,7 @@ LSTM *create_rand_lstm(int input_dim, int hidden_dim, double range1m, double ran
 }
 
 void randomize_in_lstm(LSTM *lstm, double range1, double range2) {
+	// randomizes all input vectors of lstm
 	randomize_vector(lstm->x, range1, range2);
 	randomize_vector(lstm->hp, range1, range2);
 	randomize_vector(lstm->cp, range1, range2);
@@ -311,11 +312,11 @@ void forward_pass_lstm(LSTM *lstm) {
 	hstate_eq_lstm(lstm);
 }
 
-void forward_pass_n_lstm(LSTM *lstm, gsl_vector *arr, int n) {
+void forward_pass_n_lstm(LSTM *lstm, gsl_vector **arr, int n) {
 	for (int i = 0; i < n; i++) {
-		lstm->x = &arr[i];
+		gsl_blas_dcopy(arr[i], lstm->x);
 		forward_pass_lstm(lstm);
-		lstm->hp = lstm->h;
-		lstm->cp = lstm->c;
+		gsl_blas_dcopy(lstm->h, lstm->hp);
+		gsl_blas_dcopy(lstm->c, lstm->cp);
 	}	
 }
