@@ -20,4 +20,4 @@ $(BUILD_DIR) :
 .PHONY : clean
 
 clean :
-	rm -rf $(BUILD_DIR)
+	rm -r $(BUILD_DIR)/*
