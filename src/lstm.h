@@ -69,11 +69,12 @@ void gate(gsl_matrix *wi, gsl_matrix *ui, gsl_vector *bi, gsl_vector *xi, gsl_ve
 void forget_gate_lstm(LSTM *lstm);
 void input_gate_lstm(LSTM *lstm);
 void output_gate_lstm(LSTM *lstm);
-void candidate_gate_lstm(LSTM *lstm);
 
 // other equation functions
+void candidate_gate(gsl_matrix *wi, gsl_matrix *ui, gsl_vector *bi, gsl_vector *xi, gsl_vector *hi, gsl_vector *fo);
 void cstate_eq(gsl_vector *fi, gsl_vector *cpi, gsl_vector *ii, gsl_vector *cai, gsl_vector *co); // for cell state equation
 void hstate_eq(gsl_vector *oi, gsl_vector *ci, gsl_vector *ho); // for hidden state equation
+void candidate_gate_lstm(LSTM *lstm);
 void cstate_eq_lstm(LSTM *lstm);
 void hstate_eq_lstm(LSTM *lstm);
 

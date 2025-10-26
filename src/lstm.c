@@ -248,8 +248,35 @@ void output_gate_lstm(LSTM *lstm) {
 }
 
 // cell input activation vector gate
+void candidate_gate(gsl_matrix *wi, gsl_matrix *ui, gsl_vector *bi, gsl_vector *xi, gsl_vector *hi, gsl_vector *fo) {
+	// Formula used: sigmoid(wi * xi + ui * hi + bi)
+
+	int input_dim = xi->size;
+	int hidden_dim = hi->size;
+
+	// Vector initialization
+	gsl_vector *wixi = gsl_vector_calloc(hidden_dim);
+	gsl_vector *uihi = gsl_vector_calloc(hidden_dim);
+
+	// Matrix multiplication
+	gsl_blas_dgemv(CblasNoTrans, 1, wi, xi, 0, wixi);
+	gsl_blas_dgemv(CblasNoTrans, 1, ui, hi, 0, uihi);
+
+	// Vector addition
+	gsl_blas_daxpy(1, wixi, uihi); // adding to uihi because it will be deleted anyway
+	gsl_blas_daxpy(1, bi, uihi);
+
+	// Final sigmoid result
+	tanh_vector(uihi, uihi);
+	gsl_blas_dcopy(uihi, fo);
+
+	// Memory safety steps
+	gsl_vector_free(wixi);
+	gsl_vector_free(uihi);
+}
+
 void candidate_gate_lstm(LSTM *lstm) {
-	gate(lstm->wc, lstm->uc, lstm->bc, lstm->x, lstm->hp, lstm->ca);
+	candidate_gate(lstm->wc, lstm->uc, lstm->bc, lstm->x, lstm->hp, lstm->ca);
 }
 
 void cstate_eq(gsl_vector *fi, gsl_vector *cpi, gsl_vector *ii, gsl_vector *cai, gsl_vector *co) {
@@ -280,7 +307,7 @@ void hstate_eq(gsl_vector *oi, gsl_vector *ci, gsl_vector *ho) {
 	gsl_vector *s = gsl_vector_calloc(oi->size);
 
 	// sigmoid of vector
-	sigmoid_vector(ci, s);
+	tanh_vector(ci, s);
 
 	// getting product
 	hdm_vector(oi, s, v);

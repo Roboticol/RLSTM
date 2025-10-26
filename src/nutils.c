@@ -4,6 +4,7 @@
 #include <gsl/gsl_matrix.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 #include "nutils.h"
 
 void init_utils() {
@@ -13,6 +14,14 @@ void init_utils() {
 
 double sigmoid(double n) {
     return (1 / (1 + pow(EULER_NUMBER, -n)));
+}
+
+void tanh_vector(gsl_vector *v, gsl_vector *r) {
+	int size = v->size;
+	
+	for (int i = 0; i < size; i++) {
+		gsl_vector_set(r, i, tanh(gsl_vector_get(v, i)));
+	}
 }
 
 void concatenate_vector(gsl_vector *a, gsl_vector *b, gsl_vector *r) {
