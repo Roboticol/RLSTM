@@ -9,16 +9,13 @@
 int main() {
 	init_utils();
 
-	LSTM* l = create_rand_lstm(1,1,-1,1,-1,1);
+	LSTM* l = create_rand_lstm(2,5,-1,1,-1,1);
 
-	forget_gate_lstm(l);
-	randomize_in_lstm(l, 1, 10);
-	print_matrix(l->wf, "wf ");
-	print_matrix(l->uf, "uf ");
-	print_vector(l->x, "x ");
-	print_vector(l->bf, "bf ");
-	print_vector(l->f, "");
-
+	int n = 10;
+	gsl_vector **v = series_vectors(3, n, 1, 100, -10, 10);
+	print_series_vectors(v, n, "series: ");
+	free_series_vectors(v, n);
 	free_lstm(l);
+
 	return 0;
 }

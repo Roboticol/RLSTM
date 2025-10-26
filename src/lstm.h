@@ -9,12 +9,11 @@
 // c = cell state vector
 // res = resultant vector
 //
-// in gate and other functions, which are used by the lstm and can be used by the user to test different equations i.e gate(...) and cstate_eq(...), the parameters for input have the suffix i and output have the suffix o.
+// In gate and other functions, which are used by the lstm and can be used by the user to test different equations i.e gate(...) and cstate_eq(...), the parameters for input have the suffix i and output have the suffix o.
+//
+// range1, range2 = min, max. generally used for determining range of randomly generated values
 //
 // read more information in: https://en.wikipedia.org/wiki/Long_short-term_memory
-
-// for testing
-void testfunc();
 
 // all variable notation in this struct is taken from https://en.wikipedia.org/wiki/Long_short-term_memory
 typedef struct {
@@ -53,6 +52,8 @@ typedef struct {
 
 // lstm functions
 LSTM* create_lstm(int input_dim, int hidden_dim); // (ONLY USE THESE FUNCTION FOR CREATING LSTMS) create lstm with all values initialized to 0;
+void forward_pass_lstm(LSTM *lstm); // does a forward pass
+void forward_pass_n_lstm(LSTM *lstm, gsl_vector *arr, int n); // does a forward pass on the same lstm n times. takes in an array of vectors as input, where each vector shows the change from the previous vector in a series. (arr length = n)
 void free_lstm(LSTM* lstm); // delete lstm
 void print_lstm(LSTM* lstm); // print lstm's contents
 

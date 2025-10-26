@@ -300,7 +300,22 @@ void hstate_eq_lstm(LSTM *lstm) {
 	hstate_eq(lstm->o, lstm->c, lstm->h);
 }
 
-void testfunc() {
-	printf("Running LSTM!\n");
-	printf("Sigmoid test: s(0.65) = %lf\n", sigmoid(0.65));
+void forward_pass_lstm(LSTM *lstm) {
+	// calculate all equations
+	forget_gate_lstm(lstm);
+	input_gate_lstm(lstm);
+	output_gate_lstm(lstm);
+	candidate_gate_lstm(lstm);
+
+	cstate_eq_lstm(lstm);
+	hstate_eq_lstm(lstm);
+}
+
+void forward_pass_n_lstm(LSTM *lstm, gsl_vector *arr, int n) {
+	for (int i = 0; i < n; i++) {
+		lstm->x = &arr[i];
+		forward_pass_lstm(lstm);
+		lstm->hp = lstm->h;
+		lstm->cp = lstm->c;
+	}	
 }

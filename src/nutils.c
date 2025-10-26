@@ -95,3 +95,35 @@ gsl_matrix *create_rand_matrix(int size1, int size2, double range1, double range
 	randomize_matrix(m, range1, range2);
 	return m;
 }
+
+gsl_vector **series_vectors(int size, int n, double range1i, double range2i, double range1v, double range2v) {
+	gsl_vector **vl = (gsl_vector **)malloc(n * sizeof(gsl_vector*)); // initialize an array of pointers, that point to vectors.
+	gsl_vector *v = gsl_vector_calloc(size); // initialize first vector
+	randomize_vector(v, range1i, range2i);	
+
+	vl[0] = v;
+	
+	for (int i = 1; i < n; i++) {
+		vl[i] = gsl_vector_calloc(size);	
+		for (int j = 0; j < size; j++) {
+			double delta = random_double(range1v, range2v); // amount the vector changes by
+			gsl_vector_set(vl[i], j, gsl_vector_get(vl[i-1], j) + delta);
+		}
+	}
+
+	return vl;
+}
+
+void free_series_vectors(gsl_vector **v, int n) {
+	for (int i = 0; i < n; i++) {
+		gsl_vector_free(v[i]);
+	}
+}
+
+void print_series_vectors(gsl_vector **v, int n, char *s) {
+	printf("%s\n", s);
+	for (int i = 0; i < n; i++) {
+		printf("%d: ", i);
+		print_vector(v[i], "");
+	}
+}
