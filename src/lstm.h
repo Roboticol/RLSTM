@@ -51,9 +51,10 @@ typedef struct {
 
 // lstm functions
 LSTM* create_lstm(int input_dim, int hidden_dim); // (ONLY USE THESE FUNCTION FOR CREATING LSTMS) create lstm with all values initialized to 0;
-void randomize_lstm(LSTM* lstm, int range1, int range2); // initialize LSTM with random values in a range
-LSTM* create_rand_lstm(int input_dim, int hidden_dim, int range1, int range2); // create LSTM with random values
+void randomize_lstm(LSTM *lstm, double range1m, double range2m, double range1v, double range2v); // initialize LSTM with random values in a range. pre-requisite: all objects inside the struct should already be initialized.
+LSTM* create_rand_lstm(int input_dim, int hidden_dim, double range1m, double range2m, double range1v, double range2v); // create LSTM with random values. This creates objects within the struct too.
 void free_lstm(LSTM* lstm); // delete lstm
+void print_lstm(LSTM* lstm); // print lstm's contents
 
 // general gate function
 void gate(gsl_matrix *wi, gsl_matrix *ui, gsl_vector *bi, gsl_vector *xi, gsl_vector *hi, gsl_vector *fo);

@@ -72,7 +72,8 @@ void gate(gsl_matrix *wi, gsl_matrix *ui, gsl_vector *bi, gsl_vector *xi, gsl_ve
 // this function initializes matrices and vectors
 LSTM *create_lstm(int input_dim, int hidden_dim) {
 	// allocate lstm to heap
-	LSTM *lstm = malloc(sizeof(LSTM));
+	LSTM *lstm = (LSTM *)malloc(sizeof(LSTM));
+	if (lstm == NULL) printf("ERROR: FAILED TO ALLOCATE LSTM STRUCT!\n");
 
 	// matrices
 	lstm->wf = gsl_matrix_calloc(input_dim, hidden_dim);
@@ -105,6 +106,8 @@ LSTM *create_lstm(int input_dim, int hidden_dim) {
 	// output vectors
 	lstm->h = gsl_vector_calloc(hidden_dim);
 	lstm->c = gsl_vector_calloc(hidden_dim);
+
+	return lstm;
 }
 
 void free_lstm(LSTM* lstm) {	
@@ -144,9 +147,88 @@ void free_lstm(LSTM* lstm) {
 	free(lstm);
 }
 
-void randomize_lstm(LSTM *lstm) {
+void randomize_lstm(LSTM *lstm, double range1m, double range2m, double range1v, double range2v) {
+	// weight matrices
+	randomize_matrix(lstm->wf, range1m, range2m);
+	randomize_matrix(lstm->wi, range1m, range2m);
+	randomize_matrix(lstm->wo, range1m, range2m);
+	randomize_matrix(lstm->wc, range1m, range2m);
 
+	randomize_matrix(lstm->uf, range1m, range2m);
+	randomize_matrix(lstm->ui, range1m, range2m);
+	randomize_matrix(lstm->uo, range1m, range2m);
+	randomize_matrix(lstm->uc, range1m, range2m);
+
+	// bias vectors
+	randomize_vector(lstm->bf, range1v, range2v);
+	randomize_vector(lstm->bi, range1v, range2v);
+	randomize_vector(lstm->bo, range1v, range2v);
+	randomize_vector(lstm->bc, range1v, range2v);
+
+	// input vectors
+	randomize_vector(lstm->x, range1v, range2v);
+	randomize_vector(lstm->hp, range1v, range2v); // h(t-1) vector
+	randomize_vector(lstm->cp, range1v, range2v);
+	
+	// intermediate vectors (these are used within the LSTM)
+	randomize_vector(lstm->f, range1v, range2v);
+	randomize_vector(lstm->i, range1v, range2v);
+	randomize_vector(lstm->o, range1v, range2v);
+	randomize_vector(lstm->ca, range1v, range2v); // candidate vector
+	
+	// output vectors
+	randomize_vector(lstm->h, range1v, range2v);
+	randomize_vector(lstm->c, range1v, range2v);
 }
+
+LSTM *create_rand_lstm(int input_dim, int hidden_dim, double range1m, double range2m, double range1v, double range2v) {
+	LSTM *lstm = create_lstm(input_dim, hidden_dim);
+	randomize_lstm(lstm, range1m, range2m, range1v, range2v);
+	return lstm;
+}
+
+void print_lstm(LSTM* lstm) {	
+	// matrices
+	printf("====Matrices====\n");
+	printf("--Weights Matrices--\n");
+	print_matrix(lstm->wf, "wf: ");
+	print_matrix(lstm->wi, "wi: ");
+	print_matrix(lstm->wo, "wo: ");
+	print_matrix(lstm->wc, "wc: ");
+
+	printf("--Hidden State Weights Matrices--\n");
+	print_matrix(lstm->uf, "uf: ");
+	print_matrix(lstm->ui, "ui: ");
+	print_matrix(lstm->uo, "uo: ");
+	print_matrix(lstm->uc, "uc: ");
+
+	// bias vectors
+	printf("====Vectors====\n");
+	printf("--Bias Vectors--\n");
+	print_vector(lstm->bf, "bf: ");
+	print_vector(lstm->bi, "bi: ");
+	print_vector(lstm->bo, "bo: ");
+	print_vector(lstm->bc, "bc: ");
+
+	// input vectors
+	printf("--Input Vectors--\n");
+	print_vector(lstm->x, "x: ");
+	print_vector(lstm->hp, "hp: ");
+	print_vector(lstm->cp, "cp: ");
+
+	// intermediate vectors
+	printf("--Intermediate Vectors--\n");
+	print_vector(lstm->f, "f: ");
+	print_vector(lstm->i, "i: ");
+	print_vector(lstm->o, "o: ");
+	print_vector(lstm->ca, "ca: ");
+
+	// output vectors
+	printf("--Output Vectors--\n");
+	print_vector(lstm->h, "h: ");
+	print_vector(lstm->c, "c: ");
+}
+
 
 void forget_gate(LSTM *lstm) {
 	gate(lstm->wf, lstm->uf, lstm->bf, lstm->x, lstm->hp, lstm->f);

@@ -13,14 +13,14 @@ void *sigmoid_vector(gsl_vector *v, gsl_vector *r); // calculate sigmoid of vect
 gsl_vector *concatenate_vector(gsl_vector *a, gsl_vector *b); // combine (concatenate) two vectors
 
 // utilities for printing 
-void print_vector(gsl_vector *v); 
-void print_matrix(gsl_matrix *m);
-gsl_vector *create_rand_vector(int size, double range1, double range2);
-gsl_matrix *create_rand_matrix(int size1, int size2, double range1, double range2);
+void print_vector(gsl_vector *v, char *s); 
+void print_matrix(gsl_matrix *m, char *s);
 
 // utilities for generating random objects
 double random_double(double range1, double range2);
 void randomize_vector(gsl_vector *x, double range1, double range2);
 void randomize_matrix(gsl_matrix *x, double range1, double range2);
+gsl_vector *create_rand_vector(int size, double range1, double range2);
+gsl_matrix *create_rand_matrix(int size1, int size2, double range1, double range2);
 
 #endif
