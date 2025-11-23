@@ -43,7 +43,6 @@ typedef struct {
 void gate(gsl_matrix *wi, gsl_matrix *ui, gsl_vector *bi, gsl_vector *xi, gsl_vector *hi, gsl_vector *fo) {
 	// Formula used: sigmoid(wi * xi + ui * hi + bi)
 
-	int input_dim = xi->size;
 	int hidden_dim = hi->size;
 
 	// Vector initialization
@@ -249,7 +248,7 @@ void output_gate_lstm(LSTM *lstm) {
 
 // cell input activation vector gate
 void candidate_gate(gsl_matrix *wi, gsl_matrix *ui, gsl_vector *bi, gsl_vector *xi, gsl_vector *hi, gsl_vector *fo) {
-	// Formula used: sigmoid(wi * xi + ui * hi + bi)
+	// Formula used: tanh(wi * xi + ui * hi + bi)
 
 	int input_dim = xi->size;
 	int hidden_dim = hi->size;
@@ -266,7 +265,7 @@ void candidate_gate(gsl_matrix *wi, gsl_matrix *ui, gsl_vector *bi, gsl_vector *
 	gsl_blas_daxpy(1, wixi, uihi); // adding to uihi because it will be deleted anyway
 	gsl_blas_daxpy(1, bi, uihi);
 
-	// Final sigmoid result
+	// Final tanh result
 	tanh_vector(uihi, uihi);
 	gsl_blas_dcopy(uihi, fo);
 
@@ -287,7 +286,7 @@ void cstate_eq(gsl_vector *fi, gsl_vector *cpi, gsl_vector *ii, gsl_vector *cai,
 	
 	// hadarmard product of vectors
 	hdm_vector(fi, cpi, hdm1);
-	hdm_vector(ii, cai, hdm1);
+	hdm_vector(ii, cai, hdm2);
 
 	// addition of vectors
 	gsl_blas_daxpy(1, hdm1, hdm2);
@@ -301,12 +300,12 @@ void cstate_eq(gsl_vector *fi, gsl_vector *cpi, gsl_vector *ii, gsl_vector *cai,
 }
 
 void hstate_eq(gsl_vector *oi, gsl_vector *ci, gsl_vector *ho) {
-	// formula used: oi * sigmoid(ci) ( * = hadamard product)
+	// formula used: oi * tanh(ci) ( * = hadamard product)
 	// initialize vectors
 	gsl_vector *v = gsl_vector_calloc(oi->size);
 	gsl_vector *s = gsl_vector_calloc(oi->size);
 
-	// sigmoid of vector
+	// tanh of vector
 	tanh_vector(ci, s);
 
 	// getting product
@@ -346,4 +345,8 @@ void forward_pass_n_lstm(LSTM *lstm, gsl_vector **arr, int n) {
 		gsl_blas_dcopy(lstm->h, lstm->hp);
 		gsl_blas_dcopy(lstm->c, lstm->cp);
 	}	
+}
+
+void input_vector_lstm(LSTM* lstm, gsl_vector *v) {
+	gsl_blas_dcopy(v, lstm->x);
 }

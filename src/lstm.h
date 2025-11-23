@@ -56,6 +56,7 @@ void forward_pass_lstm(LSTM *lstm); // does a forward pass
 void forward_pass_n_lstm(LSTM *lstm, gsl_vector **arr, int n); // does a forward pass on the same lstm n times. takes in an array of vectors as input, where each vector shows the change from the previous vector in a series. (arr length = n)
 void free_lstm(LSTM* lstm); // delete lstm
 void print_lstm(LSTM* lstm); // print lstm's contents
+void input_vector_lstm(LSTM *lstm, gsl_vector *v); // input a vector into the lstm
 
 // randomize functions
 void randomize_lstm(LSTM *lstm, double range1m, double range2m, double range1v, double range2v); // initialize LSTM with random values in a range. pre-requisite: all objects inside the struct should already be initialized.
