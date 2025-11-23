@@ -5,6 +5,7 @@
 #include <gsl/gsl_matrix.h>
 #include "lstm.h"
 #include "nutils.h"
+#include "backprop.h"
 
 int main() {
 	init_utils();
@@ -15,19 +16,20 @@ int main() {
 	LSTM* l = create_rand_lstm(inp_dim, hidden_dim, output_dim,-1,1,-10,10);
 	randomize_in_lstm(l, -1,1);
 
-	int n = 6;
-//	gsl_vector **v = series_vectors(inp_dim, n, 1, 100, -10, 10);
-//	print_series_vectors(v, n, "Vector series: ");
 
 	gsl_vector *v = create_rand_vector(inp_dim, -10, 10);
+	gsl_vector *h = create_rand_vector(hidden_dim, -10, 10);
 	print_vector(v, "inp: ");
+
+	bp_dEdh(l, v, h);
+
 
 	input_vector_lstm(l, v);
 	forward_pass_lstm(l);
 
 	print_lstm(l);	
+	print_vector(h, "dE/dh: ");
 
-//	free_series_vectors(v, n);
 	gsl_vector_free(v);
 	free_lstm(l);
 

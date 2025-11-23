@@ -13,8 +13,9 @@ void bp_series_lstm(LSTM *lstm, gsl_vector **series) {
 	
 }
 
-void dEdh(LSTM *lstm, gsl_vector *y, gsl_vector *o) {
+void bp_dEdh(LSTM *lstm, gsl_vector *y, gsl_vector *o) {
 	gsl_blas_daxpy(-1, y, lstm->y); // lstm->y = lstm->y - y (predicted - target)
 	mul_vector(lstm->y, 2, lstm->y); // lstm->y = 2 * lstm->y
-	gsl_blas_dgemv(CblasNoTrans, 1, lstm->wy, lstm->y, 0, o); // lstm->y * Wy = dE/dh_t
+	printf("aaaaaaaa, %ld, %ld, %ld\n", lstm->y->size, lstm->wy->size1, lstm->wy->size2);
+	gsl_blas_dgemv(CblasTrans, 1, lstm->wy, lstm->y, 0, o); // lstm->y * Wy = dE/dh_t
 }
