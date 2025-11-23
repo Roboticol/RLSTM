@@ -9,10 +9,10 @@ OBJS := $(SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 all : $(BUILD_DIR)/$(TARGET_EXEC)
 
 $(BUILD_DIR)/$(TARGET_EXEC) : $(OBJS)
-	gcc -g $^ -o $@ -lm -lgsl
+	gcc -g $^ -o $@ -lm -lgsl -Wall -Wextra
 
 $(BUILD_DIR)/%.o : $(SRC_DIR)/%.c | $(BUILD_DIR)
-	gcc -g -c $< -o $@
+	gcc -g -c $< -o $@ -Wall -Wextra
 
 $(BUILD_DIR) :
 	mkdir $(BUILD_DIR)

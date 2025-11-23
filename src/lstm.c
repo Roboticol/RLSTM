@@ -7,11 +7,18 @@
 
 // all variable notation in this struct is taken from https://en.wikipedia.org/wiki/Long_short-term_memory
 typedef struct {
+	// dimensions
+	int input_dim;
+	int output_dim;
+	int hidden_dim;
+
 	// weight matrices
 	gsl_matrix *wf;
 	gsl_matrix *wi;
 	gsl_matrix *wo;
 	gsl_matrix *wc;
+
+	gsl_matrix *wy; // output weight
 
 	gsl_matrix *uf;
 	gsl_matrix *ui;
@@ -23,6 +30,8 @@ typedef struct {
 	gsl_vector *bi;
 	gsl_vector *bo;
 	gsl_vector *bc;
+
+	gsl_vector *by; // output bias
 
 	// input vectors
 	gsl_vector *x;
@@ -36,6 +45,7 @@ typedef struct {
 	gsl_vector *ca; // candidate vector
 	
 	// output vectors
+	gsl_vector *y;
 	gsl_vector *h;
 	gsl_vector *c;
 } LSTM;
@@ -67,16 +77,23 @@ void gate(gsl_matrix *wi, gsl_matrix *ui, gsl_vector *bi, gsl_vector *xi, gsl_ve
 }
 
 // this function initializes matrices and vectors
-LSTM *create_lstm(int input_dim, int hidden_dim) {
+LSTM *create_lstm(int input_dim, int hidden_dim, int output_dim) {
 	// allocate lstm to heap
 	LSTM *lstm = (LSTM *)malloc(sizeof(LSTM));
 	if (lstm == NULL) printf("ERROR: FAILED TO ALLOCATE LSTM STRUCT!\n");
+
+	// dimensions
+	lstm->input_dim = input_dim;
+	lstm->hidden_dim = hidden_dim;
+	lstm->output_dim = output_dim;
 
 	// matrices
 	lstm->wf = gsl_matrix_calloc(hidden_dim, input_dim);
 	lstm->wi = gsl_matrix_calloc(hidden_dim, input_dim);
 	lstm->wo = gsl_matrix_calloc(hidden_dim, input_dim);
 	lstm->wc = gsl_matrix_calloc(hidden_dim, input_dim);
+
+	lstm->wy = gsl_matrix_calloc(output_dim, hidden_dim);
 
 	lstm->uf = gsl_matrix_calloc(hidden_dim, hidden_dim);
 	lstm->ui = gsl_matrix_calloc(hidden_dim, hidden_dim);
@@ -88,6 +105,8 @@ LSTM *create_lstm(int input_dim, int hidden_dim) {
 	lstm->bi = gsl_vector_calloc(hidden_dim);
 	lstm->bo = gsl_vector_calloc(hidden_dim);
 	lstm->bc = gsl_vector_calloc(hidden_dim);
+
+	lstm->by = gsl_vector_calloc(output_dim);
 
 	// input vectors
 	lstm->x = gsl_vector_calloc(input_dim);
@@ -101,6 +120,7 @@ LSTM *create_lstm(int input_dim, int hidden_dim) {
 	lstm->ca = gsl_vector_calloc(hidden_dim);
 
 	// output vectors
+	lstm->y = gsl_vector_calloc(output_dim);
 	lstm->h = gsl_vector_calloc(hidden_dim);
 	lstm->c = gsl_vector_calloc(hidden_dim);
 
@@ -114,6 +134,8 @@ void free_lstm(LSTM* lstm) {
 	gsl_matrix_free(lstm->wo);
 	gsl_matrix_free(lstm->wc);
 
+	gsl_matrix_free(lstm->wy);
+
 	gsl_matrix_free(lstm->uf);
 	gsl_matrix_free(lstm->ui);
 	gsl_matrix_free(lstm->uo);
@@ -124,6 +146,8 @@ void free_lstm(LSTM* lstm) {
 	gsl_vector_free(lstm->bi);
 	gsl_vector_free(lstm->bo);
 	gsl_vector_free(lstm->bc);
+
+	gsl_vector_free(lstm->by);
 
 	// input vectors
 	gsl_vector_free(lstm->x);
@@ -137,6 +161,7 @@ void free_lstm(LSTM* lstm) {
 	gsl_vector_free(lstm->ca);
 
 	// output vectors
+	gsl_vector_free(lstm->y);
 	gsl_vector_free(lstm->h);
 	gsl_vector_free(lstm->c);
 
@@ -151,6 +176,8 @@ void randomize_lstm(LSTM *lstm, double range1m, double range2m, double range1v, 
 	randomize_matrix(lstm->wo, range1m, range2m);
 	randomize_matrix(lstm->wc, range1m, range2m);
 
+	randomize_matrix(lstm->wy, range1m, range2m);
+
 	randomize_matrix(lstm->uf, range1m, range2m);
 	randomize_matrix(lstm->ui, range1m, range2m);
 	randomize_matrix(lstm->uo, range1m, range2m);
@@ -161,6 +188,8 @@ void randomize_lstm(LSTM *lstm, double range1m, double range2m, double range1v, 
 	randomize_vector(lstm->bi, range1v, range2v);
 	randomize_vector(lstm->bo, range1v, range2v);
 	randomize_vector(lstm->bc, range1v, range2v);
+
+	randomize_vector(lstm->by, range1v, range2v);
 
 	// input vectors
 	// randomize_vector(lstm->x, range1v, range2v);
@@ -178,8 +207,8 @@ void randomize_lstm(LSTM *lstm, double range1m, double range2m, double range1v, 
 	// randomize_vector(lstm->c, range1v, range2v);
 }
 
-LSTM *create_rand_lstm(int input_dim, int hidden_dim, double range1m, double range2m, double range1v, double range2v) {
-	LSTM *lstm = create_lstm(input_dim, hidden_dim);
+LSTM *create_rand_lstm(int input_dim, int hidden_dim, int output_dim, double range1m, double range2m, double range1v, double range2v) {
+	LSTM *lstm = create_lstm(input_dim, hidden_dim, output_dim);
 	randomize_lstm(lstm, range1m, range2m, range1v, range2v);
 	return lstm;
 }
@@ -200,6 +229,8 @@ void print_lstm(LSTM* lstm) {
 	print_matrix(lstm->wo, "wo: ");
 	print_matrix(lstm->wc, "wc: ");
 
+	print_matrix(lstm->wy, "wy: ");
+
 	printf("--Hidden State Weights Matrices--\n");
 	print_matrix(lstm->uf, "uf: ");
 	print_matrix(lstm->ui, "ui: ");
@@ -213,6 +244,8 @@ void print_lstm(LSTM* lstm) {
 	print_vector(lstm->bi, "bi: ");
 	print_vector(lstm->bo, "bo: ");
 	print_vector(lstm->bc, "bc: ");
+
+	print_vector(lstm->by, "by: ");
 
 	// input vectors
 	printf("--Input Vectors--\n");
@@ -229,6 +262,7 @@ void print_lstm(LSTM* lstm) {
 
 	// output vectors
 	printf("--Output Vectors--\n");
+	print_vector(lstm->y, "y: ");
 	print_vector(lstm->h, "h: ");
 	print_vector(lstm->c, "c: ");
 }
@@ -250,7 +284,6 @@ void output_gate_lstm(LSTM *lstm) {
 void candidate_gate(gsl_matrix *wi, gsl_matrix *ui, gsl_vector *bi, gsl_vector *xi, gsl_vector *hi, gsl_vector *fo) {
 	// Formula used: tanh(wi * xi + ui * hi + bi)
 
-	int input_dim = xi->size;
 	int hidden_dim = hi->size;
 
 	// Vector initialization
@@ -327,6 +360,13 @@ void hstate_eq_lstm(LSTM *lstm) {
 	hstate_eq(lstm->o, lstm->c, lstm->h);
 }
 
+void output_lstm(LSTM* lstm) {
+	// y = Wy*h + by
+	gsl_blas_dgemv(CblasNoTrans, 1, lstm->wy, lstm->h, 0, lstm->y);
+	gsl_blas_daxpy(1, lstm->y, lstm->by);
+}
+
+
 void forward_pass_lstm(LSTM *lstm) {
 	// calculate all equations
 	forget_gate_lstm(lstm);
@@ -336,6 +376,8 @@ void forward_pass_lstm(LSTM *lstm) {
 
 	cstate_eq_lstm(lstm);
 	hstate_eq_lstm(lstm);
+
+	output_lstm(lstm);
 }
 
 void forward_pass_n_lstm(LSTM *lstm, gsl_vector **arr, int n) {

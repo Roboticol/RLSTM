@@ -11,7 +11,8 @@ int main() {
 
 	int inp_dim = 1;
 	int hidden_dim = 2;
-	LSTM* l = create_rand_lstm(inp_dim,hidden_dim,-1,1,-10,10);
+	int output_dim = 1;
+	LSTM* l = create_rand_lstm(inp_dim, hidden_dim, output_dim,-1,1,-10,10);
 	randomize_in_lstm(l, -1,1);
 
 	int n = 6;

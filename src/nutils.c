@@ -136,3 +136,26 @@ void print_series_vectors(gsl_vector **v, int n, char *s) {
 		print_vector(v[i], "");
 	}
 }
+
+double mse(double a, double b) {
+	return pow((a - b), 2);
+}
+
+double mse_vector(gsl_vector *a, gsl_vector *b) {
+	double res = 0;
+	int size = a->size;
+
+	for (int i = 0; i < size; i++) {
+		// perform mse on different values of vectors and add them to result variable res
+		res += mse(gsl_vector_get(a, i), gsl_vector_get(b, i));
+	}
+	return res/((double)size);
+}
+
+void mul_vector(gsl_vector *a, double c, gsl_vector *r) {
+	int size = r->size;
+
+	for (int i = 0; i < size; i++) {
+		gsl_vector_set(r, i, gsl_vector_get(a, i) * c);
+	}
+}
