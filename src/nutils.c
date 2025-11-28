@@ -24,6 +24,14 @@ void tanh_vector(gsl_vector *v, gsl_vector *r) {
 	}
 }
 
+void sech_vector(gsl_vector *v, gsl_vector *r) {
+	int size = v->size;
+	
+	for (int i = 0; i < size; i++) {
+		gsl_vector_set(r, i, 1/cosh(gsl_vector_get(v, i)));
+	}
+}
+
 void concatenate_vector(gsl_vector *a, gsl_vector *b, gsl_vector *r) {
 	int asize = a->size;
 	int bsize = b->size;
@@ -157,5 +165,13 @@ void mul_vector(gsl_vector *a, double c, gsl_vector *r) {
 
 	for (int i = 0; i < size; i++) {
 		gsl_vector_set(r, i, gsl_vector_get(a, i) * c);
+	}
+}
+
+void add_vector(double b, gsl_vector *a, double c, gsl_vector *r) {
+	int size = r->size;
+
+	for (int i = 0; i < size; i++) {
+		gsl_vector_set(r, i, (b * gsl_vector_get(a, i)) + c);
 	}
 }

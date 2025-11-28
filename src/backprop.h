@@ -6,6 +6,7 @@
 // Formulae:
 // dsigmoid/dx = sigmoid(x) * (1 - sigmoid(x))
 // dE/dh = 2(lstm->y - y) * Wy
+// dh/do = sigmoid(c)
 // dh/dc = o * sech^2(c)
 // dE/dW(gate) = dE/dh * dh/dc * dc/d(gate) * d(gate)/dW(gate) (only applies to forget, input/update and candidate gates).
 // i.e: dE/dWf = (2(y-lstm->y) * Wy) * (o * sech^2(c)) * (cp) * (sigmoid(Wfx + Ufhp + bh) * (1 - sigmoid(Wfx + Ufhp + bh)*x)
@@ -31,8 +32,14 @@
 //
 // note: the p after the variable names denotes the previous state of the variables, i.e: cp = c(t-1) where t-> time
 
+// an enum for the different gates, CAND = CANDIDATE 
+typedef enum {INPUT, OUTPUT, FORGET, CAND} BP_GATES;
+
 // backpropagate an lstm along a series of vectors
 void bp_series_lstm(LSTM* lstm, gsl_vector **series);
+
+// utility functions
+void bp_X(BP_GATES gate, LSTM *lstm, gsl_vector *out); // calculate X = Wx + Uhp + b
 
 // gradient functions
 void bp_dEdh(LSTM *lstm, gsl_vector *y, gsl_vector *out); // compute gradient loss wrt hidden state.
@@ -42,9 +49,9 @@ void bp_dhdo(LSTM *lstm, gsl_vector *out); // compute gradient of hidden state w
 
 // these functions don't take any arguments because they just use pre-existing variables inside the lstm as input!
 // compute gradients of g gate (input gate, output gate and forget gate)
-void bp_dgdW(LSTM *lstm, gsl_vector *out);
-void bp_dgdU(LSTM *lstm, gsl_vector *out);
-void bp_dgdb(LSTM *lstm, gsl_vector *out);
+void bp_dgdW(BP_GATES gate, LSTM *lstm, gsl_vector *out);
+void bp_dgdU(BP_GATES gate, LSTM *lstm, gsl_vector *out);
+void bp_dgdb(BP_GATES gate, LSTM *lstm, gsl_vector *out);
 // compute gradients of candidate gate
 void bp_dcadW(LSTM *lstm, gsl_vector *out); 
 void bp_dcadU(LSTM *lstm, gsl_vector *out);
