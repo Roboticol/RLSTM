@@ -3,38 +3,56 @@
 
 #include "nutils.h"
 
-// Notes taken from: https://www.geeksforgeeks.org/dsa/lstm-derivation-of-back-propagation-through-time/
-// gradient of loss wrt output gate
-// dE/do = dE/dh * tanh(c)
+// Formulae:
+// dsigmoid/dx = sigmoid(x) * (1 - sigmoid(x))
+// dE/dh = 2(lstm->y - y) * Wy
+// dh/dc = o * sech^2(c)
+// dE/dW(gate) = dE/dh * dh/dc * dc/d(gate) * d(gate)/dW(gate) (only applies to forget, input/update and candidate gates).
+// i.e: dE/dWf = (2(y-lstm->y) * Wy) * (o * sech^2(c)) * (cp) * (sigmoid(Wfx + Ufhp + bh) * (1 - sigmoid(Wfx + Ufhp + bh)*x)
+// dE/dWo = dE/dh * dh/do * do/dWo
 //
-// gradient of loss wrt cell state
-// dE/dc = dE/dh * o * (1-tanh^2(c))
+// dc/df = cp
+// dc/di = ca (ca -> candidate cell state)
+// dc/dca = i
 //
-// gradient of loss wrt input gate and candidate cell state
-// dE/di = dE/dc * g
-// dE/dg = dE/dc * i
+// A pattern i've observed is that i, o and f gates have the same formula template. Hence we can write a general equation for them, that is:
+// g = sigmoid(Wx + Uhp + b)
+// hence the gradient wrt to weights and biases will be:
+// dg/dW = sigmoid(X) * (1 - sigmoid(X)) * x
+// where X = Wx + Uhp + b
+// similarily, for the rest:
+// dg/dU = sigmoid(X) * (1 - sigmoid(X)) * hp
+// dg/db = sigmoid(X) * (1 - sigmoid(X))
 //
-// gradient of loss wrt forget gate
-// dE/df = dE/dc * cp (cp -> previous cell state)
+// for candidate gate:
+// do/dW = sech^2(X) * x
+// do/dU = sech^2(X) * hp
+// do/db = sech^2(X)
 //
-// gradient of loss wrt previous cell state
-// dE/dcp = dE/dc * f
-//
-// gradients for output gate weights
-// dE/dWxo = dE/do * o(1 - o) * x
-// dE/dWho = dE/do * o(1 - o) * hp
-// dE/dbo = dE/do * o(1 - o)
-//
-// lstm->y = lstm's predicted output
-// y = actual/target output
-
+// note: the p after the variable names denotes the previous state of the variables, i.e: cp = c(t-1) where t-> time
 
 // backpropagate an lstm along a series of vectors
 void bp_series_lstm(LSTM* lstm, gsl_vector **series);
 
 // gradient functions
-void bp_dEdh(LSTM *lstm, gsl_vector *y, gsl_vector *o); // compute gradient loss wrt hidden state. dE/dh.
+void bp_dEdh(LSTM *lstm, gsl_vector *y, gsl_vector *out); // compute gradient loss wrt hidden state.
 // y = actual/target output
+void bp_dhdc(LSTM *lstm, gsl_vector *out); // compute gradient of hidden state wrt cell state.
+void bp_dhdo(LSTM *lstm, gsl_vector *out); // compute gradient of hidden state wrt output gate vector
+
+// these functions don't take any arguments because they just use pre-existing variables inside the lstm as input!
+// compute gradients of g gate (input gate, output gate and forget gate)
+void bp_dgdW(LSTM *lstm, gsl_vector *out);
+void bp_dgdU(LSTM *lstm, gsl_vector *out);
+void bp_dgdb(LSTM *lstm, gsl_vector *out);
+// compute gradients of candidate gate
+void bp_dcadW(LSTM *lstm, gsl_vector *out); 
+void bp_dcadU(LSTM *lstm, gsl_vector *out);
+void bp_dcadb(LSTM *lstm, gsl_vector *out);
+
+void bp_dcdf(LSTM *lstm, gsl_vector *out); // compute gradient of cell state wrt forget get vector
+void bp_dcdi(LSTM *lstm, gsl_vector *out); // compute gradient of cell state wrt input gate vector
+void bp_dcdca(LSTM *lstm, gsl_vector *out); // compute gradient of cell state wrt candidate gate vector
 
 
 #endif
