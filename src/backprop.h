@@ -10,7 +10,8 @@
 // dh/do = sigmoid(c)
 // dh/dc = o * sech^2(c)
 // dE/dW(gate) = dE/dh * dh/dc * dc/d(gate) * d(gate)/dW(gate) (only applies to forget, input/update and candidate gates).
-// i.e: dE/dWf = (2(y-lstm->y) * Wy) * (o * sech^2(c)) * (cp) * (sigmoid(Wfx + Ufhp + bh) * (1 - sigmoid(Wfx + Ufhp + bh)*x)
+// example 1: dE/dWf = (2(y-lstm->y) * Wy) * (o * sech^2(c)) * (cp) * (sigmoid(Wfx + Ufhp + bh) * (1 - sigmoid(Wfx + Ufhp + bh)*x)
+// example 2: dE/dWo = dE/dh * dh/do * do/dWo (chain rule)
 //
 // dE/dWo = dE/dh * dh/do * do/dWo
 //
@@ -37,7 +38,14 @@
 // an enum for the different gates, CAND = CANDIDATE 
 typedef enum {INPUT, OUTPUT, FORGET, CAND} BP_GATES;
 
-// backpropagate an lstm along a series of vectors
+// an enum for different parameters. W - Weights, U - Recurrent Weights, b - bias vectors
+typedef enum {W, U, b} BP_PARA;
+
+// backpropagate an lstm along a series of vectors (backpropagation through time)
+// backpropagation works like this:
+// during forward pass, for each element in the series we clone the LSTM. And we store the all the calculated vectors inside that LSTM. We then move forward to the next element and keep repeating it until we reach the last element of the series.
+// we also store all the losses of each timestep into a list and sum them up.
+// we then start the backward pass. We go to the (n-1)th element and calculate gradients for it wrt each weight and bias
 void bp_series_lstm(LSTM* lstm, gsl_vector **series);
 
 // utility functions
@@ -62,6 +70,11 @@ void bp_dcadb(LSTM *lstm, gsl_vector *out);
 void bp_dcdf(LSTM *lstm, gsl_vector *out); // compute gradient of cell state wrt forget get vector
 void bp_dcdi(LSTM *lstm, gsl_vector *out); // compute gradient of cell state wrt input gate vector
 void bp_dcdca(LSTM *lstm, gsl_vector *out); // compute gradient of cell state wrt candidate gate vector
+
+// gradient loss wrt model parameters (W, U, and b)
+// the capital P here means what parameter we're calculating with respect to, it can be W - Weight, U - recurrent kernel weights, b - bias vectors
+void bp_dEdP(BP_GATES gate, BP_PARA para, LSTM *lstm, gsl_vector *out); // calculate gradient loss wrt gate parameter. only works for forget, input and candidate gates!
+void bp_dEdPo(BP_PARA para, LSTM *lstm, gsl_vector *out); // calculate gradient loss wrt parameters of output gate
 
 
 #endif

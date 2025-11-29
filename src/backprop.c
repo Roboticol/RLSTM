@@ -180,3 +180,11 @@ void bp_dcdi(LSTM *lstm, gsl_vector *out) {
 void bp_dcdca(LSTM *lstm, gsl_vector *out) {
 	gsl_blas_dcopy(lstm->i, out);
 }
+
+void bp_dEdP(BP_GATES gate, BP_PARA para, LSTM *lstm, gsl_vector *out) {
+	
+}
+
+void bp_dEdPo(BP_PARA para, LSTM *lstm, gsl_vector *out) {
+
+}
