@@ -1,6 +1,7 @@
 #ifndef BCKPROP_H
 #define BCKPROP_H
 
+#include "lstm.h"
 #include "nutils.h"
 
 // Formulae:
@@ -10,6 +11,7 @@
 // dh/dc = o * sech^2(c)
 // dE/dW(gate) = dE/dh * dh/dc * dc/d(gate) * d(gate)/dW(gate) (only applies to forget, input/update and candidate gates).
 // i.e: dE/dWf = (2(y-lstm->y) * Wy) * (o * sech^2(c)) * (cp) * (sigmoid(Wfx + Ufhp + bh) * (1 - sigmoid(Wfx + Ufhp + bh)*x)
+//
 // dE/dWo = dE/dh * dh/do * do/dWo
 //
 // dc/df = cp
@@ -26,9 +28,9 @@
 // dg/db = sigmoid(X) * (1 - sigmoid(X))
 //
 // for candidate gate:
-// do/dW = sech^2(X) * x
-// do/dU = sech^2(X) * hp
-// do/db = sech^2(X)
+// dca/dW = sech^2(X) * x
+// dca/dU = sech^2(X) * hp
+// dca/db = sech^2(X)
 //
 // note: the p after the variable names denotes the previous state of the variables, i.e: cp = c(t-1) where t-> time
 

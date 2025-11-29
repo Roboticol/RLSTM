@@ -3,6 +3,7 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_blas.h>
+#include "backprop.h"
 #include "lstm.h"
 #include "nutils.h"
 
@@ -22,19 +23,23 @@ void bp_X(BP_GATES gate, LSTM *lstm, gsl_vector *out) {
 		case FORGET:
 			gsl_blas_dgemv(CblasNoTrans, 1, lstm->wf, lstm->x, 0, t1);
 			gsl_blas_dgemv(CblasNoTrans, 1, lstm->uf, lstm->hp, 0, t2);
-			gsl_blas_dcopy(bf, t3);
+			gsl_blas_dcopy(lstm->bf, t3);
+			break;
 		case INPUT:
 			gsl_blas_dgemv(CblasNoTrans, 1, lstm->wi, lstm->x, 0, t1);
 			gsl_blas_dgemv(CblasNoTrans, 1, lstm->ui, lstm->hp, 0, t2);
-			gsl_blas_dcopy(bi, t3);
+			gsl_blas_dcopy(lstm->bi, t3);
+			break;
 		case OUTPUT:
 			gsl_blas_dgemv(CblasNoTrans, 1, lstm->wo, lstm->x, 0, t1);
 			gsl_blas_dgemv(CblasNoTrans, 1, lstm->uo, lstm->hp, 0, t2);
-			gsl_blas_dcopy(bo, t3);
+			gsl_blas_dcopy(lstm->bo, t3);
+			break;
 		case CAND:
 			gsl_blas_dgemv(CblasNoTrans, 1, lstm->wc, lstm->x, 0, t1);
 			gsl_blas_dgemv(CblasNoTrans, 1, lstm->uc, lstm->hp, 0, t2);
-			gsl_blas_dcopy(bc, t3);
+			gsl_blas_dcopy(lstm->bc, t3);
+			break;
 	}
 
 	gsl_blas_daxpy(1, t1, t2); // t2 = Wx + Uhp
@@ -87,7 +92,7 @@ void bp_dgdW(BP_GATES gate, LSTM *lstm, gsl_vector *out) {
 	gsl_vector_free(t2);
 }
 
-void bp_dgdU(LSTM *lstm, gsl_vector *out) {
+void bp_dgdU(BP_GATES gate, LSTM *lstm, gsl_vector *out) {
 	gsl_vector *t1 = gsl_vector_calloc(lstm->hidden_dim);
 	gsl_vector *t2 = gsl_vector_calloc(lstm->hidden_dim);
 
@@ -102,7 +107,7 @@ void bp_dgdU(LSTM *lstm, gsl_vector *out) {
 	gsl_vector_free(t2);
 }
 
-void bp_dgdb(LSTM *lstm, gsl_vector *out) {
+void bp_dgdb(BP_GATES gate, LSTM *lstm, gsl_vector *out) {
 	gsl_vector *t1 = gsl_vector_calloc(lstm->hidden_dim);
 	gsl_vector *t2 = gsl_vector_calloc(lstm->hidden_dim);
 
@@ -121,7 +126,7 @@ void bp_dcadW(LSTM *lstm, gsl_vector *out) {
 	gsl_vector *t1 = gsl_vector_calloc(lstm->hidden_dim);
 	gsl_vector *t2 = gsl_vector_calloc(lstm->hidden_dim);
 
-	bp_X(gate, lstm, t1); // calculate X
+	bp_X(CAND, lstm, t1); // calculate X
 	sech_vector(t1, t1); // t1 = sech(X)
 	hdm_vector(t1, t1, t1); // t1 = sech^2(X)
 	add_vector(-1, t1, 1, t2); // t2 = 1 - sech^2(X)
@@ -137,7 +142,7 @@ void bp_dcadU(LSTM *lstm, gsl_vector *out) {
 	gsl_vector *t1 = gsl_vector_calloc(lstm->hidden_dim);
 	gsl_vector *t2 = gsl_vector_calloc(lstm->hidden_dim);
 
-	bp_X(gate, lstm, t1); // calculate X
+	bp_X(CAND, lstm, t1); // calculate X
 	sech_vector(t1, t1); // t1 = sech(X)
 	hdm_vector(t1, t1, t1); // t1 = sech^2(X)
 	add_vector(-1, t1, 1, t2); // t2 = 1 - sech^2(X)
@@ -153,7 +158,7 @@ void bp_dcadb(LSTM *lstm, gsl_vector *out) {
 	gsl_vector *t1 = gsl_vector_calloc(lstm->hidden_dim);
 	gsl_vector *t2 = gsl_vector_calloc(lstm->hidden_dim);
 
-	bp_X(gate, lstm, t1); // calculate X
+	bp_X(CAND, lstm, t1); // calculate X
 	sech_vector(t1, t1); // t1 = sech(X)
 	hdm_vector(t1, t1, t1); // t1 = sech^2(X)
 	add_vector(-1, t1, 1, t2); // t2 = 1 - sech^2(X)
@@ -165,13 +170,13 @@ void bp_dcadb(LSTM *lstm, gsl_vector *out) {
 }
 
 void bp_dcdf(LSTM *lstm, gsl_vector *out) {
-
+	gsl_blas_dcopy(lstm->cp, out);
 }
 
 void bp_dcdi(LSTM *lstm, gsl_vector *out) {
-
+	gsl_blas_dcopy(lstm->ca, out);
 }
 
 void bp_dcdca(LSTM *lstm, gsl_vector *out) {
-
+	gsl_blas_dcopy(lstm->i, out);
 }

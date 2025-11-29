@@ -1,5 +1,5 @@
-# contents of build/
 build/
+*.json
 
 # Prerequisites
 *.d
