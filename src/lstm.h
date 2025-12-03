@@ -56,10 +56,25 @@ typedef struct {
 	gsl_vector *ca; // candidate vector
 	
 	// output vectors
-	gsl_vector *y; // NOTE: this value gets modified during backprop
+	gsl_vector *y;
 	gsl_vector *h;
 	gsl_vector *c;
 } LSTM;
+
+// struct for storing list of lstms
+typedef struct {
+	size_t size; // length of list
+	LSTM **data; // list storing data
+} LSTM_L;
+
+
+// lstm list functions
+LSTM_L* lstml_create(int size); // create lstm list with size
+void lstml_delete(LSTM_L *list); // delete lstm list
+void lstml_append(LSTM_L *list, LSTM *lstm); // append lstm to end of list
+void lstml_insert(LSTM_L *list, LSTM *lstm, int index); // insert lstm to index of list
+void lstml_remove(LSTM_L *list, int index); // delete lstm at index
+LSTM *lstml_get(LSTM_L *list, int index); // get lstm at index of list
 
 // lstm functions
 LSTM* create_lstm(int input_dim, int hidden_dim, int output_dim); // (ONLY USE THESE FUNCTION FOR CREATING LSTMS) create lstm with all values initialized to 0;
@@ -72,7 +87,7 @@ void input_vector_lstm(LSTM *lstm, gsl_vector *v); // input a vector into the ls
 // randomize functions
 void randomize_lstm(LSTM *lstm, double range1m, double range2m, double range1v, double range2v); // initialize LSTM with random values in a range. pre-requisite: all objects inside the struct should already be initialized.
 LSTM *create_rand_lstm(int input_dim, int hidden_dim, int output_dim, double range1m, double range2m, double range1v, double range2v); // create LSTM with random values. This creates objects within the struct too. (ONLY RANDOMIZES WEIGHTS AND BIASES!)
-LSTM *randomize_in_lstm(LSTM *lstm, double range1, double range2); // randomize lstm's inputs
+void randomize_in_lstm(LSTM *lstm, double range1, double range2); // randomize lstm's inputs
 
 // general gate function
 void gate(gsl_matrix *wi, gsl_matrix *ui, gsl_vector *bi, gsl_vector *xi, gsl_vector *hi, gsl_vector *fo);

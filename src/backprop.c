@@ -188,3 +188,10 @@ void bp_dEdP(BP_GATES gate, BP_PARA para, LSTM *lstm, gsl_vector *out) {
 void bp_dEdPo(BP_PARA para, LSTM *lstm, gsl_vector *out) {
 
 }
+
+void bp_dEdc(int t, LSTM **lstms, gsl_vector *out) {
+	// STEP 1:
+	// calculate gradient flowing from hidden state h -> cell state c at timestep t
+	// dE/dct = dE/dht * dh/dct
+	
+}

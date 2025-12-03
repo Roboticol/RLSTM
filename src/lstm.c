@@ -4,51 +4,7 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_blas.h>
 #include "nutils.h"
-
-// all variable notation in this struct is taken from https://en.wikipedia.org/wiki/Long_short-term_memory
-typedef struct {
-	// dimensions
-	int input_dim;
-	int output_dim;
-	int hidden_dim;
-
-	// weight matrices
-	gsl_matrix *wf;
-	gsl_matrix *wi;
-	gsl_matrix *wo;
-	gsl_matrix *wc;
-
-	gsl_matrix *wy; // output weight
-
-	gsl_matrix *uf;
-	gsl_matrix *ui;
-	gsl_matrix *uo;
-	gsl_matrix *uc;
-
-	// bias vectors
-	gsl_vector *bf;
-	gsl_vector *bi;
-	gsl_vector *bo;
-	gsl_vector *bc;
-
-	gsl_vector *by; // output bias
-
-	// input vectors
-	gsl_vector *x;
-	gsl_vector *hp; // h(t-1) vector
-	gsl_vector *cp;
-	
-	// intermediate vectors (these are used within the LSTM)
-	gsl_vector *f;
-	gsl_vector *i;
-	gsl_vector *o;
-	gsl_vector *ca; // candidate vector
-	
-	// output vectors
-	gsl_vector *y;
-	gsl_vector *h;
-	gsl_vector *c;
-} LSTM;
+#include "lstm.h"
 
 void gate(gsl_matrix *wi, gsl_matrix *ui, gsl_vector *bi, gsl_vector *xi, gsl_vector *hi, gsl_vector *fo) {
 	// Formula used: sigmoid(wi * xi + ui * hi + bi)
@@ -391,4 +347,49 @@ void forward_pass_n_lstm(LSTM *lstm, gsl_vector **arr, int n) {
 
 void input_vector_lstm(LSTM* lstm, gsl_vector *v) {
 	gsl_blas_dcopy(v, lstm->x);
+}
+
+LSTM_L *lstml_create() {
+	LSTM_L *l = (LSTM_L *)malloc(sizeof(LSTM_L)); // mallocs lstm object
+	l->data = malloc(0);
+	l->size = 0;
+	return l;
+}
+
+void lstml_delete(LSTM_L *list) {
+	free(list->data);
+	free(list);
+}
+
+void lstml_append(LSTM_L *list, LSTM *lstm) {
+	list->size += 1; // increase length of list by 1
+	list->data = (LSTM **)realloc(list->data, list->size*sizeof(LSTM **)); // increase size of data block
+	list->data[size-1] = lstm; // set last element to lstm
+}
+
+void lstml_insert(LSTM_L *list, LSTM *lstm, int index) {
+	list->size += 1; // increase length of list by 1
+	list->data = (LSTM **)realloc(list->data, list->size*sizeof(LSTM **)); // increase size of data block
+	
+	// move all the lstm pointers away from the insertion point towards right
+	for (int i = list->size-1; i > index; i--) {
+		list->data[i] = list->data[i-1];
+	}
+	list->data[index] = lstm;
+}
+
+void lstml_remove(LSTM_L *list, int index) {
+	list->data[index] = nullptr; // delete lstm pointer from list
+	
+	// move all the lstm pointers to the right of index to the left
+	for (int i = index; i < list->size - 1; i++) {
+		list->data[i] = list->data[i+1];
+	}
+
+	list->size -= 1; // decrease length by 1
+	list->data = (LSTM **)realloc(list->data, list->size*sizeof(LSTM **)); // increase size of data block
+}
+
+LSTM *lstml_get(LSTM_L *list, int index) {
+	return list->data[index]; // just return the lstm pointer at index ¯\_(ツ)_/¯
 }

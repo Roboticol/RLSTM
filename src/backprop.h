@@ -33,6 +33,15 @@
 // dca/dU = sech^2(X) * hp
 // dca/db = sech^2(X)
 //
+// so far the formulas i've given are for only one timestep. For multiple timesteps:
+// dE/dWf = summation(t = 1, T, dE/dat * xt^T) where a = Wx + Uhp + b
+// dE/dc = dE/dht * dht/dct + summation(k=t+1, T, dE/dck*dck/dct)
+// first term is influence from hidden term (h) and second term is influence from future cell states
+// dck/dct = multiplication(j = t + 1, k, fj) where f -> forget gate output
+//
+// recurrence form:
+// dE/dct = dE/dht * ot(sech^2(ct)) + f(t+1) * dE/dc(t+1)
+//
 // note: the p after the variable names denotes the previous state of the variables, i.e: cp = c(t-1) where t-> time
 
 // an enum for the different gates, CAND = CANDIDATE 
@@ -73,8 +82,9 @@ void bp_dcdca(LSTM *lstm, gsl_vector *out); // compute gradient of cell state wr
 
 // gradient loss wrt model parameters (W, U, and b)
 // the capital P here means what parameter we're calculating with respect to, it can be W - Weight, U - recurrent kernel weights, b - bias vectors
-void bp_dEdP(BP_GATES gate, BP_PARA para, LSTM *lstm, gsl_vector *out); // calculate gradient loss wrt gate parameter. only works for forget, input and candidate gates!
-void bp_dEdPo(BP_PARA para, LSTM *lstm, gsl_vector *out); // calculate gradient loss wrt parameters of output gate
+void bp_tdEdP(BP_GATES gate, BP_PARA para, int t, LSTM *lstm, gsl_vector *out); // calculate gradient loss wrt gate parameter. only works for forget, input and candidate gates!
+void bp_tdEdPo(BP_PARA para, int t, LSTM *lstm, gsl_vector *out); // calculate gradient loss wrt parameters of output gate
+void bp_dEdc(int t, LSTM **lstms, gsl_vector *out); // calculate dEdc (gradient loss wrt cell state at timestep t)
 
 
 #endif
