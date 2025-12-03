@@ -84,7 +84,7 @@ void bp_dcdca(LSTM *lstm, gsl_vector *out); // compute gradient of cell state wr
 // the capital P here means what parameter we're calculating with respect to, it can be W - Weight, U - recurrent kernel weights, b - bias vectors
 void bp_tdEdP(BP_GATES gate, BP_PARA para, int t, LSTM *lstm, gsl_vector *out); // calculate gradient loss wrt gate parameter. only works for forget, input and candidate gates!
 void bp_tdEdPo(BP_PARA para, int t, LSTM *lstm, gsl_vector *out); // calculate gradient loss wrt parameters of output gate
-void bp_dEdc(int t, LSTM **lstms, gsl_vector *out); // calculate dEdc (gradient loss wrt cell state at timestep t)
+void bp_dEdc(int t, LSTM_L *list, gsl_vector **series, gsl_vector *out); // calculate dEdc (gradient loss wrt cell state at timestep t)
 
 
 #endif

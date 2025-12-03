@@ -351,7 +351,7 @@ void input_vector_lstm(LSTM* lstm, gsl_vector *v) {
 
 LSTM_L *lstml_create() {
 	LSTM_L *l = (LSTM_L *)malloc(sizeof(LSTM_L)); // mallocs lstm object
-	l->data = malloc(0);
+	l->data = (LSTM **)malloc(0);
 	l->size = 0;
 	return l;
 }
@@ -364,7 +364,7 @@ void lstml_delete(LSTM_L *list) {
 void lstml_append(LSTM_L *list, LSTM *lstm) {
 	list->size += 1; // increase length of list by 1
 	list->data = (LSTM **)realloc(list->data, list->size*sizeof(LSTM **)); // increase size of data block
-	list->data[size-1] = lstm; // set last element to lstm
+	list->data[list->size-1] = lstm; // set last element to lstm
 }
 
 void lstml_insert(LSTM_L *list, LSTM *lstm, int index) {

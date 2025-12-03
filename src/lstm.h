@@ -63,13 +63,13 @@ typedef struct {
 
 // struct for storing list of lstms
 typedef struct {
-	size_t size; // length of list
+	int size; // length of list
 	LSTM **data; // list storing data
 } LSTM_L;
 
 
 // lstm list functions
-LSTM_L* lstml_create(int size); // create lstm list with size
+LSTM_L* lstml_create(); // create lstm list with size
 void lstml_delete(LSTM_L *list); // delete lstm list
 void lstml_append(LSTM_L *list, LSTM *lstm); // append lstm to end of list
 void lstml_insert(LSTM_L *list, LSTM *lstm, int index); // insert lstm to index of list

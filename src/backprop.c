@@ -189,9 +189,37 @@ void bp_dEdPo(BP_PARA para, LSTM *lstm, gsl_vector *out) {
 
 }
 
-void bp_dEdc(int t, LSTM **lstms, gsl_vector *out) {
-	// STEP 1:
-	// calculate gradient flowing from hidden state h -> cell state c at timestep t
-	// dE/dct = dE/dht * dh/dct
-	
+void bp_dEdc(int t, LSTM_L *list, gsl_vector **series, gsl_vector *out) {
+	int hidden_dim = list->data[0]->hidden_dim;
+	gsl_vector *res = gsl_vector_calloc(hidden_dim);
+
+	int i2 = 0;
+
+	for (int i = t; i < list->size; i++) {
+		// STEP 1:
+		// calculate gradient flowing from hidden state h -> cell state c at timestep t
+		// dE/dct = dE/dht * dh/dct
+
+		gsl_vector *t1 = gsl_vector_calloc(hidden_dim);
+		gsl_vector *t2 = gsl_vector_calloc(hidden_dim);
+		bp_dEdh(lstml_get(list, i), series[i], t1); // t1 = dEt/dht
+		bp_dhdc(lstml_get(list, i), t2); // t2 = dht/dct
+		hdm_vector(t1, t2, t1); // t1 = dEt/dht * dht/dct
+
+		// STEP 2:
+		// calculate gradient flowing from future cell states c(t+x) -> current cell state c(t)
+		for (int j = 0; j < i2; j++) {
+			hdm_vector(t1, lstml_get(list, i + j + 1)->f, t1);
+		}
+
+		gsl_blas_daxpy(1, t1, res);
+
+		gsl_vector_free(t1);
+		gsl_vector_free(t2);
+
+		i2++;
+	}
+
+	gsl_blas_dcopy(res, out);
+	gsl_vector_free(res);
 }
