@@ -351,7 +351,7 @@ void input_vector_lstm(LSTM* lstm, gsl_vector *v) {
 
 LSTM_L *lstml_create() {
 	LSTM_L *l = (LSTM_L *)malloc(sizeof(LSTM_L)); // mallocs lstm object
-	l->data = (LSTM **)malloc(0);
+	l->data = (LSTM **)malloc(sizeof(LSTM *));
 	l->size = 0;
 	return l;
 }
