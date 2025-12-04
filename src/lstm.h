@@ -47,7 +47,7 @@ typedef struct {
 	// input vectors
 	gsl_vector *x;
 	gsl_vector *hp; // h(t-1) vector
-	gsl_vector *cp;
+	gsl_vector *cp; // c(t-1) vector
 	
 	// intermediate vectors (these are used within the LSTM)
 	gsl_vector *f;
@@ -69,20 +69,23 @@ typedef struct {
 
 
 // lstm list functions
-LSTM_L* lstml_create(); // create lstm list with size
-void lstml_delete(LSTM_L *list); // delete lstm list
+LSTM_L *lstml_create(); // create lstm list with size
+void lstml_delete(LSTM_L *list); // delete lstm list without deleting the lstms inside it
+void lstml_deletex(LSTM_L *list); // delete lstm list along with the lstms stored in it
 void lstml_append(LSTM_L *list, LSTM *lstm); // append lstm to end of list
 void lstml_insert(LSTM_L *list, LSTM *lstm, int index); // insert lstm to index of list
-void lstml_remove(LSTM_L *list, int index); // delete lstm at index
+void lstml_remove(LSTM_L *list, int index); // delete lstm pointer at index (does not delete the lstm itself!)
+void lstml_removex(LSTM_L *list, int index); // delete lstm at index (deletes the whole lstm itself)
 LSTM *lstml_get(LSTM_L *list, int index); // get lstm at index of list
 
 // lstm functions
-LSTM* create_lstm(int input_dim, int hidden_dim, int output_dim); // (ONLY USE THESE FUNCTION FOR CREATING LSTMS) create lstm with all values initialized to 0;
+LSTM *create_lstm(int input_dim, int hidden_dim, int output_dim); // (ONLY USE THESE FUNCTION FOR CREATING LSTMS) create lstm with all values initialized to 0;
 void forward_pass_lstm(LSTM *lstm); // does a forward pass
 void forward_pass_n_lstm(LSTM *lstm, gsl_vector **arr, int n); // does a forward pass on the same lstm n times. takes in an array of vectors as input, where each vector shows the change from the previous vector in a series. (arr length = n)
 void free_lstm(LSTM* lstm); // delete lstm
 void print_lstm(LSTM* lstm); // print lstm's contents
 void input_vector_lstm(LSTM *lstm, gsl_vector *v); // input a vector into the lstm
+LSTM *clone_lstm(LSTM *lstm); // clone lstm
 
 // randomize functions
 void randomize_lstm(LSTM *lstm, double range1m, double range2m, double range1v, double range2v); // initialize LSTM with random values in a range. pre-requisite: all objects inside the struct should already be initialized.

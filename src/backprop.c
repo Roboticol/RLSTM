@@ -7,11 +7,31 @@
 #include "lstm.h"
 #include "nutils.h"
 
-void bp_series_lstm(LSTM *lstm, gsl_vector **series) {
+void bp_series_lstm(LSTM *lstm, gsl_vector **series, int n) {
 	printf("beginning backpropagation...");
 
 	// dE/dh gradient
-	
+	LSTM_L *list = bp_fwdpass(lstm, series, n);
+}
+
+LSTM_L *bp_fwdpass(LSTM *lstm, gsl_vector **series, int n) {
+	LSTM_L *l = lstml_create(); // create lstm list (unrolled lstm)
+
+	for (int i = 0; i < n; i++) {
+		if (i > 0) {
+			// copy outputs from last lstm output
+			gsl_blas_dcopy(lstm->c, lstm->cp);
+			gsl_blas_dcopy(lstm->h, lstm->hp);
+		}
+
+		input_vector_lstm(lstm, series[i]); // input series data at index into lstm
+		forward_pass_lstm(lstm); // forward pass lstm
+
+		LSTM *clone = clone_lstm(lstm); // clone lstm and append it to list
+		lstml_append(l, clone);
+	}
+
+	return l;
 }
 
 void bp_X(BP_GATES gate, LSTM *lstm, gsl_vector *out) {

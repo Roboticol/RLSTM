@@ -223,6 +223,48 @@ void print_lstm(LSTM* lstm) {
 	print_vector(lstm->c, "c: ");
 }
 
+LSTM *clone_lstm(LSTM *lstm) {
+	LSTM *clone = create_lstm(lstm->input_dim, lstm->hidden_dim, lstm->output_dim);
+
+	// matrices
+	gsl_matrix_memcpy(clone->wf, lstm->wf);
+	gsl_matrix_memcpy(clone->wi, lstm->wi);
+	gsl_matrix_memcpy(clone->wo, lstm->wo);
+	gsl_matrix_memcpy(clone->wc, lstm->wc);
+
+	gsl_matrix_memcpy(clone->wy, lstm->wy);
+
+	gsl_matrix_memcpy(clone->uf, lstm->uf);
+	gsl_matrix_memcpy(clone->ui, lstm->ui);
+	gsl_matrix_memcpy(clone->uo, lstm->uo);
+	gsl_matrix_memcpy(clone->uc, lstm->uc);
+
+	// bias vectors
+	gsl_blas_dcopy(lstm->bf, clone->bf);
+	gsl_blas_dcopy(lstm->bi, clone->bi);
+	gsl_blas_dcopy(lstm->bo, clone->bo);
+	gsl_blas_dcopy(lstm->bc, clone->bc);
+
+	gsl_blas_dcopy(lstm->by, clone->by);
+
+	// input vectors
+	gsl_blas_dcopy(lstm->x, clone->x);
+	gsl_blas_dcopy(lstm->hp, clone->hp);
+	gsl_blas_dcopy(lstm->cp, clone->cp);
+
+	// intermediate vectors
+	gsl_blas_dcopy(lstm->f, clone->f);
+	gsl_blas_dcopy(lstm->i, clone->i);
+	gsl_blas_dcopy(lstm->o, clone->o);
+	gsl_blas_dcopy(lstm->ca, clone->ca);
+
+	// output vectors
+	gsl_blas_dcopy(lstm->y, clone->y);
+	gsl_blas_dcopy(lstm->h, clone->h);
+	gsl_blas_dcopy(lstm->c, clone->c);
+	
+	return clone;
+}
 
 void forget_gate_lstm(LSTM *lstm) {
 	gate(lstm->wf, lstm->uf, lstm->bf, lstm->x, lstm->hp, lstm->f);
@@ -361,6 +403,15 @@ void lstml_delete(LSTM_L *list) {
 	free(list);
 }
 
+void lstml_deletex(LSTM_L *list) {
+	for (int i = 0; i < list->size; i++) {
+		lstml_removex(list, i);
+	}
+
+	free(list->data);
+	free(list);
+}
+
 void lstml_append(LSTM_L *list, LSTM *lstm) {
 	list->size += 1; // increase length of list by 1
 	list->data = (LSTM **)realloc(list->data, list->size*sizeof(LSTM **)); // increase size of data block
@@ -381,13 +432,18 @@ void lstml_insert(LSTM_L *list, LSTM *lstm, int index) {
 void lstml_remove(LSTM_L *list, int index) {
 	list->data[index] = nullptr; // delete lstm pointer from list
 	
-	// move all the lstm pointers to the right of index to the left
+	// move all the lstm pointers right of index to the left
 	for (int i = index; i < list->size - 1; i++) {
 		list->data[i] = list->data[i+1];
 	}
 
 	list->size -= 1; // decrease length by 1
 	list->data = (LSTM **)realloc(list->data, list->size*sizeof(LSTM **)); // increase size of data block
+}
+
+void lstml_removex(LSTM_L *list, int index) {
+	free_lstm(lstml_get(list, index)); // delete lstm at list index
+	lstml_remove(list, index); // remove the pointer from the list
 }
 
 LSTM *lstml_get(LSTM_L *list, int index) {

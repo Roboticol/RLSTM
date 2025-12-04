@@ -55,10 +55,11 @@ typedef enum {W, U, b} BP_PARA;
 // during forward pass, for each element in the series we clone the LSTM. And we store the all the calculated vectors inside that LSTM. We then move forward to the next element and keep repeating it until we reach the last element of the series.
 // we also store all the losses of each timestep into a list and sum them up.
 // we then start the backward pass. We go to the (n-1)th element and calculate gradients for it wrt each weight and bias
-void bp_series_lstm(LSTM* lstm, gsl_vector **series);
+void bp_series_lstm(LSTM* lstm, gsl_vector **series, int n);
 
 // utility functions
 void bp_X(BP_GATES gate, LSTM *lstm, gsl_vector *out); // calculate X = Wx + Uhp + b
+LSTM_L *bp_fwdpass(LSTM *lstm, gsl_vector **series, int n); // do a forward pass, store all the variables of the unrolled lstm in list. length of series = n
 
 // gradient functions
 void bp_dEdh(LSTM *lstm, gsl_vector *y, gsl_vector *out); // compute gradient loss wrt hidden state.
