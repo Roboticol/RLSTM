@@ -20,6 +20,10 @@ double mse(double a, double b); // mean squared error on 2 values
 double mse_vector(gsl_vector *a, gsl_vector *b); // perform mean squared error on multiple values
 void mul_vector(gsl_vector *a, double c, gsl_vector *r); // multiply elements of vector a with constant c, c*a = r.
 void add_vector(double b, gsl_vector *a, double c, gsl_vector *r); // add/subtract elements of vector with constant. r = b * a + c.
+void mul_matrix(gsl_matrix *a, double c, gsl_matrix *r); // multiply elements of matrix a with constant c, c*a = r.
+void add_matrix(gsl_matrix *a, double b, gsl_matrix *c, double d, double e, gsl_matrix *r); // this function is not like the add_vector function, this function follows the formula:
+// r = a * b + c * d + e
+// where a and c are matrices. b,d,e are constants.
 
 // utilities for series of vectors
 gsl_vector **series_vectors(int size, int n, double range1i, double range2i, double range1v, double range2v); // create an array of n vectors of length size for simulating graphs. 

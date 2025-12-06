@@ -17,6 +17,8 @@
 // read more information in: https://en.wikipedia.org/wiki/Long_short-term_memory
 
 // all variable notation in this struct is taken from https://en.wikipedia.org/wiki/Long_short-term_memory
+
+// NOTE: wc, uc, bc are weights and biases for the candidate gate
 typedef struct {
 	// dimensions
 	int input_dim;
@@ -27,7 +29,7 @@ typedef struct {
 	gsl_matrix *wf;
 	gsl_matrix *wi;
 	gsl_matrix *wo;
-	gsl_matrix *wc;
+	gsl_matrix *wc; // candidate gate weight
 
 	gsl_matrix *wy; // output weight
 

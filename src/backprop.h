@@ -85,7 +85,15 @@ void bp_dcdca(LSTM *lstm, gsl_vector *out); // compute gradient of cell state wr
 // the capital P here means what parameter we're calculating with respect to, it can be W - Weight, U - recurrent kernel weights, b - bias vectors
 void bp_tdEdP(BP_GATES gate, BP_PARA para, int t, LSTM *lstm, gsl_vector *out); // calculate gradient loss wrt gate parameter. only works for forget, input and candidate gates!
 void bp_tdEdPo(BP_PARA para, int t, LSTM *lstm, gsl_vector *out); // calculate gradient loss wrt parameters of output gate
-void bp_dEdc(int t, LSTM_L *list, gsl_vector **series, gsl_vector *out); // calculate dEdc (gradient loss wrt cell state at timestep t)
+void bp_tdEdc(int t, LSTM_L *list, gsl_vector **series, gsl_vector *out); // calculate dEdc (gradient loss wrt cell state at timestep t)
+
+// learning functions
+void bp_lWg(BP_GATES gate, LSTM *lstm, gsl_matrix *p); // change the weight parameter of gate, i.e:
+// Wf = Wf - learning rate * dE/dWf (where vector p is dE/dWf)
+void bp_lUg(BP_GATES gate, LSTM *lstm, gsl_matrix *p); // change the recurrent weight parameter of gate, i.e:
+// Uf = Uf - learning rate * dE/dUf (where vector p is dE/dUf)
+void bp_lbg(BP_GATES gate, LSTM *lstm, gsl_vector *p); // change the bias parameter of gate, i.e:
+// bf = bf - learning rate * dE/dbf (where vector p is dE/dbf)
 
 
 #endif

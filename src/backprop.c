@@ -7,11 +7,18 @@
 #include "lstm.h"
 #include "nutils.h"
 
+static double learning_rate = 0.001;
+
 void bp_series_lstm(LSTM *lstm, gsl_vector **series, int n) {
 	printf("beginning backpropagation...");
 
 	// dE/dh gradient
 	LSTM_L *list = bp_fwdpass(lstm, series, n);
+	
+	for (int i = 0; i < n; i++) {
+		gsl_vector *dEdc = gsl_vector_calloc(lstm->hidden_dim);
+		bp_tdEdc(i, list, series, dEdc);
+	}
 }
 
 LSTM_L *bp_fwdpass(LSTM *lstm, gsl_vector **series, int n) {
@@ -209,7 +216,7 @@ void bp_dEdPo(BP_PARA para, LSTM *lstm, gsl_vector *out) {
 
 }
 
-void bp_dEdc(int t, LSTM_L *list, gsl_vector **series, gsl_vector *out) {
+void bp_tdEdc(int t, LSTM_L *list, gsl_vector **series, gsl_vector *out) {
 	int hidden_dim = list->data[0]->hidden_dim;
 	gsl_vector *res = gsl_vector_calloc(hidden_dim);
 
@@ -242,4 +249,67 @@ void bp_dEdc(int t, LSTM_L *list, gsl_vector **series, gsl_vector *out) {
 
 	gsl_blas_dcopy(res, out);
 	gsl_vector_free(res);
+}
+
+void bp_lWg(BP_GATES gate, LSTM *lstm, gsl_matrix *p) {
+	gsl_matrix *t1 = gsl_matrix_calloc(lstm->hidden_dim, lstm->input_dim);
+	gsl_matrix **t2;
+	switch(gate) {
+		case INPUT:
+		t2 = lstm->wi;
+		break;
+		case OUTPUT:
+		t2 = lstm->wo;
+		break;
+		case FORGET:
+		t2 = lstm->wf;
+		break;
+		case CAND:
+		t2 = lstm->wc;
+		break;
+	}
+
+	add_matrix(*t2, 1, p, -learning_rate, *t2);
+}
+
+void bp_lUg(BP_GATES gate, LSTM *lstm, gsl_matrix *p) {
+	gsl_matrix *t1 = gsl_matrix_calloc(lstm->hidden_dim, lstm->hidden_dim);
+	gsl_matrix **t2;
+	switch(gate) {
+		case INPUT:
+		t2 = lstm->ui;
+		break;
+		case OUTPUT:
+		t2 = lstm->uo;
+		break;
+		case FORGET:
+		t2 = lstm->uf;
+		break;
+		case CAND:
+		t2 = lstm->uc;
+		break;
+	}
+
+	add_matrix(*t2, 1, p, -learning_rate, *t2);
+}
+
+void bp_lbg(BP_GATES gate, LSTM *lstm, gsl_vector *p) {
+	gsl_vector *t1 = gsl_vector_calloc(lstm->hidden_dim);
+	gsl_vector **t2;
+	switch(gate) {
+		case INPUT:
+		t2 = lstm->bi;
+		break;
+		case OUTPUT:
+		t2 = lstm->bo;
+		break;
+		case FORGET:
+		t2 = lstm->bf;
+		break;
+		case CAND:
+		t2 = lstm->bc;
+		break;
+	}
+
+	gsl_blas_daxpy(-learning_rate, p, *t2);
 }

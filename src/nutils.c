@@ -161,7 +161,7 @@ double mse_vector(gsl_vector *a, gsl_vector *b) {
 }
 
 void mul_vector(gsl_vector *a, double c, gsl_vector *r) {
-	int size = r->size;
+	int size = a->size;
 
 	for (int i = 0; i < size; i++) {
 		gsl_vector_set(r, i, gsl_vector_get(a, i) * c);
@@ -169,9 +169,34 @@ void mul_vector(gsl_vector *a, double c, gsl_vector *r) {
 }
 
 void add_vector(double b, gsl_vector *a, double c, gsl_vector *r) {
-	int size = r->size;
+	int size = a->size;
 
 	for (int i = 0; i < size; i++) {
 		gsl_vector_set(r, i, (b * gsl_vector_get(a, i)) + c);
+	}
+}
+
+void mul_matrix(gsl_matrix *a, double c, gsl_matrix *r) {
+	int size1 = a->size1;
+	int size2 = a->size2;
+
+	for (int y = 0; y < size1; y++) {
+		for (int x = 0; x < size2; x++) {
+			gsl_matrix_set(r, y, x, gsl_matrix_get(a, y, x) * c);
+		}
+	}
+}
+
+void add_matrix(gsl_matrix *a, double b, gsl_matrix *c, double d, double e, gsl_matrix *r) {
+	// formula: a * b + c * d + e = r. 
+	// a and c -> matrices
+	// b, d, e -> constants
+	int size1 = a->size1;
+	int size2 = a->size2;
+
+	for (int y = 0; y < size1; y++) {
+		for (int x = 0; x < size2; x++) {
+			gsl_matrix_set(r, y, x, (gsl_matrix_get(a, y, x) * b) + (gsl_matrix_get(c, y, x) * d) + e);
+		}
 	}
 }
