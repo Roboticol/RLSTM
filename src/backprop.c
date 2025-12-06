@@ -256,20 +256,20 @@ void bp_lWg(BP_GATES gate, LSTM *lstm, gsl_matrix *p) {
 	gsl_matrix **t2;
 	switch(gate) {
 		case INPUT:
-		t2 = lstm->wi;
+		t2 = &(lstm->wi);
 		break;
 		case OUTPUT:
-		t2 = lstm->wo;
+		t2 = &(lstm->wo);
 		break;
 		case FORGET:
-		t2 = lstm->wf;
+		t2 = &(lstm->wf);
 		break;
 		case CAND:
-		t2 = lstm->wc;
+		t2 = &(lstm->wc);
 		break;
 	}
 
-	add_matrix(*t2, 1, p, -learning_rate, *t2);
+	add_matrix(*t2, 1, p, -learning_rate, 0, *t2);
 }
 
 void bp_lUg(BP_GATES gate, LSTM *lstm, gsl_matrix *p) {
@@ -277,20 +277,20 @@ void bp_lUg(BP_GATES gate, LSTM *lstm, gsl_matrix *p) {
 	gsl_matrix **t2;
 	switch(gate) {
 		case INPUT:
-		t2 = lstm->ui;
+		t2 = &(lstm->ui);
 		break;
 		case OUTPUT:
-		t2 = lstm->uo;
+		t2 = &(lstm->uo);
 		break;
 		case FORGET:
-		t2 = lstm->uf;
+		t2 = &(lstm->uf);
 		break;
 		case CAND:
-		t2 = lstm->uc;
+		t2 = &(lstm->uc);
 		break;
 	}
 
-	add_matrix(*t2, 1, p, -learning_rate, *t2);
+	add_matrix(*t2, 1, p, -learning_rate, 0, *t2);
 }
 
 void bp_lbg(BP_GATES gate, LSTM *lstm, gsl_vector *p) {
@@ -298,16 +298,16 @@ void bp_lbg(BP_GATES gate, LSTM *lstm, gsl_vector *p) {
 	gsl_vector **t2;
 	switch(gate) {
 		case INPUT:
-		t2 = lstm->bi;
+		t2 = &(lstm->bi);
 		break;
 		case OUTPUT:
-		t2 = lstm->bo;
+		t2 = &(lstm->bo);
 		break;
 		case FORGET:
-		t2 = lstm->bf;
+		t2 = &(lstm->bf);
 		break;
 		case CAND:
-		t2 = lstm->bc;
+		t2 = &(lstm->bc);
 		break;
 	}
 
