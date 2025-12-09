@@ -18,6 +18,17 @@ void bp_series_lstm(LSTM *lstm, gsl_vector **series, int n) {
 	for (int i = 0; i < n; i++) {
 		gsl_vector *dEdc = gsl_vector_calloc(lstm->hidden_dim);
 		bp_tdEdc(i, list, series, dEdc);
+
+		gsl_vector *dcdf = gsl_vector_calloc(lstm->hidden_dim);
+		bp_dcdf(lstm, dcdf);
+
+		gsl_vector *dfdW = gsl_vector_calloc(lstm->hidden_dim);
+		bp_dgdW(FORGET, lstm, dfdW);
+
+		gsl_vector *dEdWf = gsl_vector_calloc(lstm->hidden_dim); // calculate the final dEdWft, gradient loss w.r.t weight of forget gate.
+		hdm_vector(dEdc, dcdf, dEdWf);
+		hdm_vector(dEdWf, dfdW, dEdWf);
+
 	}
 }
 
