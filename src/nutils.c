@@ -2,6 +2,7 @@
 #include <math.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
+#include <gsl/gsl_blas.h>
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
@@ -199,4 +200,36 @@ void add_matrix(gsl_matrix *a, double b, gsl_matrix *c, double d, double e, gsl_
 			gsl_matrix_set(r, y, x, (gsl_matrix_get(a, y, x) * b) + (gsl_matrix_get(c, y, x) * d) + e);
 		}
 	}
+}
+
+gsl_matrix *convert_vtm(CBLAS_TRANSPOSE_t trans, gsl_vector *v) {
+	// converts vector of dimension n into a matrix of dimension n * 1 or 1 * n
+	gsl_matrix *m; 
+
+	switch (trans) {
+		case CblasNoTrans:
+			m = gsl_matrix_calloc(v, 1);
+			break;
+		case CblasTrans:
+			m = gsl_matrix_calloc(1, v);
+			break;
+		default:
+			printf("Invalid option\n");
+			break;
+	}
+
+	for (int i = 0; i < v->size; i++) {
+		switch (trans) {
+			case CblasNoTrans:
+				gsl_matrix_set(m, i, 1, gsl_vector_get(v, i));
+				break;
+			case CblasTrans:
+				gsl_matrix_set(m, 1, v, gsl_vector_get(v, i));
+				break;
+			default:
+				break;
+		}
+	}
+
+	return m;
 }

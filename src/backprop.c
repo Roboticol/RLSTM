@@ -14,22 +14,32 @@ void bp_series_lstm(LSTM *lstm, gsl_vector **series, int n) {
 
 	// dE/dh gradient
 	LSTM_L *list = bp_fwdpass(lstm, series, n);
-	
+	BCKPROP_CXT *context = bp_create_cxt(lstm);
+
 	for (int i = 0; i < n; i++) {
+		// formulas in backprop.h
 		gsl_vector *dEdc = gsl_vector_calloc(lstm->hidden_dim);
 		bp_tdEdc(i, list, series, dEdc);
 
 		gsl_vector *dcdf = gsl_vector_calloc(lstm->hidden_dim);
 		bp_dcdf(lstm, dcdf);
-
+		
 		gsl_vector *dfdW = gsl_vector_calloc(lstm->hidden_dim);
 		bp_dgdW(FORGET, lstm, dfdW);
 
-		gsl_vector *dEdWf = gsl_vector_calloc(lstm->hidden_dim); // calculate the final dEdWft, gradient loss w.r.t weight of forget gate.
+		// calculate the final dEdWft, gradient loss w.r.t weight of forget gate.
+		gsl_vector *dEdWf = gsl_vector_calloc(lstm->hidden_dim); 
 		hdm_vector(dEdc, dcdf, dEdWf);
 		hdm_vector(dEdWf, dfdW, dEdWf);
 
+		// add up all the gradients
+		gsl_vector_daxpy(1, dEdWf, dEdWf);
+		add_matrix(dEdWf, 1, context->dEdWf, 1, 0, context->dEdWf) // context->dEdWf += dEdWf
+
 	}
+
+	lstml_deletex(list);
+	bp_delete_cxt(context);
 }
 
 LSTM_L *bp_fwdpass(LSTM *lstm, gsl_vector **series, int n) {
@@ -115,7 +125,7 @@ void bp_dhdo(LSTM *lstm, gsl_vector *out) {
 }
 
 // these functions don't take any arguments because they just use pre-existing variables inside the lstm as input!
-void bp_dgdW(BP_GATES gate, LSTM *lstm, gsl_vector *out) {
+void bp_dgdW(BP_GATES gate, LSTM *lstm, gsl_matrix *out) {
 	gsl_vector *t1 = gsl_vector_calloc(lstm->hidden_dim);
 	gsl_vector *t2 = gsl_vector_calloc(lstm->hidden_dim);
 
@@ -124,7 +134,10 @@ void bp_dgdW(BP_GATES gate, LSTM *lstm, gsl_vector *out) {
 	add_vector(-1, t1, 1, t2); // t2 = 1 - sigmoid(X)
 	hdm_vector(t1, t2, t2); // t2 = sigmoid(X) * (1 - sigmoid(X))
 
-	hdm_vector(lstm->x, t2, out); // out = sigmoid(X) * (1 - sigmoid(X)) * x
+	gsl_matrix *x_matrix = convert_vtm(CblasTrans, lstm->x); // x as a tranposed matrix.
+	gsl_matrix *t_matrix = convert_vtm(CblasNoTrans, t2); // t2 as a tranposed matrix.
+	// we perform matrix multiplication: t_matrix * x_matrix to get our final matrix result
+	gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 0, t_matrix, x_matrix, 0, out); // out = sigmoid(X) * (1 - sigmoid(X)) * x
 
 	gsl_vector_free(t1);
 	gsl_vector_free(t2);
@@ -217,14 +230,6 @@ void bp_dcdi(LSTM *lstm, gsl_vector *out) {
 
 void bp_dcdca(LSTM *lstm, gsl_vector *out) {
 	gsl_blas_dcopy(lstm->i, out);
-}
-
-void bp_dEdP(BP_GATES gate, BP_PARA para, LSTM *lstm, gsl_vector *out) {
-	
-}
-
-void bp_dEdPo(BP_PARA para, LSTM *lstm, gsl_vector *out) {
-
 }
 
 void bp_tdEdc(int t, LSTM_L *list, gsl_vector **series, gsl_vector *out) {
@@ -323,4 +328,48 @@ void bp_lbg(BP_GATES gate, LSTM *lstm, gsl_vector *p) {
 	}
 
 	gsl_blas_daxpy(-learning_rate, p, *t2);
+}
+
+BCKPROP_CXT *bp_create_cxt(LSTM *lstm) {
+	// allocate different matrix and vector gradients
+	BCKPROP_CXT *backprop_context = (BCKPROP_CXT *)malloc(BCKPROP_CXT);
+
+	backprop_context->dEdWf = gsl_matrix_calloc(lstm->hidden_dim, lstm->input_dim);
+	backprop_context->dEdUf = gsl_matrix_calloc(lstm->hidden_dim, lstm->input_dim);
+	backprop_context->dEdbf = gsl_vector_calloc(lstm->hidden_dim);
+
+	backprop_context->dEdWi = gsl_matrix_calloc(lstm->hidden_dim, lstm->input_dim);
+	backprop_context->dEdUi = gsl_matrix_calloc(lstm->hidden_dim, lstm->input_dim);
+	backprop_context->dEdbi = gsl_vector_calloc(lstm->hidden_dim);
+
+	backprop_context->dEdWo = gsl_matrix_calloc(lstm->hidden_dim, lstm->input_dim);
+	backprop_context->dEdUo = gsl_matrix_calloc(lstm->hidden_dim, lstm->input_dim);
+	backprop_context->dEdbo = gsl_vector_calloc(lstm->hidden_dim);
+
+	backprop_context->dEdWc = gsl_matrix_calloc(lstm->hidden_dim, lstm->input_dim);
+	backprop_context->dEdUc = gsl_matrix_calloc(lstm->hidden_dim, lstm->input_dim);
+	backprop_context->dEdbc = gsl_vector_calloc(lstm->hidden_dim);
+
+	return backprop_context;
+}
+
+void bp_delete_cxt(BCKPROP_CXT *cxt) {
+	// free all resources from backprop context
+	gsl_matrix_free(cxt->dEdWf);
+	gsl_matrix_free(cxt->dEdUf);
+	gsl_matrix_free(cxt->dEdbf);
+
+	gsl_matrix_free(cxt->dEdWi);
+	gsl_matrix_free(cxt->dEdUi);
+	gsl_matrix_free(cxt->dEdbi);
+
+	gsl_matrix_free(cxt->dEdWo);
+	gsl_matrix_free(cxt->dEdUo);
+	gsl_matrix_free(cxt->dEdbo);
+
+	gsl_matrix_free(cxt->dEdWc);
+	gsl_matrix_free(cxt->dEdUc);
+	gsl_matrix_free(cxt->dEdbc);
+	
+	free(cxt);
 }

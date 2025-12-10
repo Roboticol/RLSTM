@@ -50,6 +50,29 @@ typedef enum {INPUT, OUTPUT, FORGET, CAND} BP_GATES;
 // an enum for different parameters. W - Weights, U - Recurrent Weights, b - bias vectors
 typedef enum {W, U, b} BP_PARA;
 
+// a struct for the "context" of our backpropagation algorithm, it stores values like total error, total gradient loss wrt all parameters of the lstm, etc.
+typedef struct {   
+	gsl_vector *dEdWf = gsl_vector_calloc(lstm->hidden_dim);
+	gsl_vector *dEdUf = gsl_vector_calloc(lstm->hidden_dim);
+	gsl_vector *dEdbf = gsl_vector_calloc(lstm->hidden_dim);
+
+	gsl_vector *dEdWi = gsl_vector_calloc(lstm->hidden_dim);
+	gsl_vector *dEdUi = gsl_vector_calloc(lstm->hidden_dim);
+	gsl_vector *dEdbi = gsl_vector_calloc(lstm->hidden_dim);
+
+	gsl_vector *dEdWo = gsl_vector_calloc(lstm->hidden_dim);
+	gsl_vector *dEdUo = gsl_vector_calloc(lstm->hidden_dim);
+	gsl_vector *dEdbo = gsl_vector_calloc(lstm->hidden_dim);
+
+	gsl_vector *dEdWc = gsl_vector_calloc(lstm->hidden_dim);
+	gsl_vector *dEdUc = gsl_vector_calloc(lstm->hidden_dim);
+	gsl_vector *dEdbc = gsl_vector_calloc(lstm->hidden_dim);
+} BCKPROP_CXT;
+
+// backprop context functions
+BCKPROP_CXT *bp_create_cxt(LSTM *lstm);
+void bp_delete_cxt(BCKPROP_CXT *cxt);
+
 // backpropagate an lstm along a series of vectors (backpropagation through time)
 // backpropagation works like this:
 // during forward pass, for each element in the series we clone the LSTM. And we store the all the calculated vectors inside that LSTM. We then move forward to the next element and keep repeating it until we reach the last element of the series.
@@ -83,8 +106,9 @@ void bp_dcdca(LSTM *lstm, gsl_vector *out); // compute gradient of cell state wr
 
 // gradient loss wrt model parameters (W, U, and b)
 // the capital P here means what parameter we're calculating with respect to, it can be W - Weight, U - recurrent kernel weights, b - bias vectors
-void bp_tdEdP(BP_GATES gate, BP_PARA para, int t, LSTM *lstm, gsl_vector *out); // calculate gradient loss wrt gate parameter. only works for forget, input and candidate gates!
-void bp_tdEdPo(BP_PARA para, int t, LSTM *lstm, gsl_vector *out); // calculate gradient loss wrt parameters of output gate
+// these two functions are commented as they're not going to be used anytime soon.
+// void bp_tdEdP(BP_GATES gate, BP_PARA para, int t, LSTM *lstm, gsl_vector *out); // calculate gradient loss wrt gate parameter. only works for forget, input and candidate gates!
+// void bp_tdEdPo(BP_PARA para, int t, LSTM *lstm, gsl_vector *out); // calculate gradient loss wrt parameters of output gate
 void bp_tdEdc(int t, LSTM_L *list, gsl_vector **series, gsl_vector *out); // calculate dEdc (gradient loss wrt cell state at timestep t)
 
 // learning functions

@@ -3,6 +3,7 @@
 
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
+#include <gsl/gsl_blas.h>
 
 // definition of euler's number
 #define EULER_NUMBER 2.71828
@@ -21,8 +22,7 @@ double mse_vector(gsl_vector *a, gsl_vector *b); // perform mean squared error o
 void mul_vector(gsl_vector *a, double c, gsl_vector *r); // multiply elements of vector a with constant c, c*a = r.
 void add_vector(double b, gsl_vector *a, double c, gsl_vector *r); // add/subtract elements of vector with constant. r = b * a + c.
 void mul_matrix(gsl_matrix *a, double c, gsl_matrix *r); // multiply elements of matrix a with constant c, c*a = r.
-void add_matrix(gsl_matrix *a, double b, gsl_matrix *c, double d, double e, gsl_matrix *r); // this function is not like the add_vector function, this function follows the formula:
-// r = a * b + c * d + e
+void add_matrix(gsl_matrix *a, double b, gsl_matrix *c, double d, double e, gsl_matrix *r); // this function is not like the add_vector function, this function follows the formula: r = a * b + c * d + e
 // where a and c are matrices. b,d,e are constants.
 
 // utilities for series of vectors
@@ -31,6 +31,9 @@ gsl_vector **series_vectors(int size, int n, double range1i, double range2i, dou
 // range1v, range2v = minimum, maximum of how much the randomly generated subsequent vectors will change. 
 void free_series_vectors(gsl_vector **v, int n); // frees series vectors
 void print_series_vectors(gsl_vector **v, int n, char *s); // print series of n vectors, s = title string
+
+// utilities for vector-matrix conversion
+gsl_matrix *convert_vtm(CBLAS_TRANSPOSE_t trans, gsl_vector *v); // converts a vector to a matrix, trans options can be = CblasNoTrans, CblasTrans only. The function won't work for CblasConjTrans.
 
 // utilities for printing, s = title string
 void print_vector(gsl_vector *v, char *s); 
