@@ -24,16 +24,14 @@ void bp_series_lstm(LSTM *lstm, gsl_vector **series, int n) {
 		gsl_vector *dcdf = gsl_vector_calloc(lstm->hidden_dim);
 		bp_dcdf(lstm, dcdf);
 		
-		gsl_vector *dfdW = gsl_vector_calloc(lstm->hidden_dim);
+		gsl_matrix *dfdW = gsl_vector_calloc(lstm->hidden_dim, input_dim);
 		bp_dgdW(FORGET, lstm, dfdW);
 
 		// calculate the final dEdWft, gradient loss w.r.t weight of forget gate.
-		gsl_vector *dEdWf = gsl_vector_calloc(lstm->hidden_dim); 
-		hdm_vector(dEdc, dcdf, dEdWf);
-		hdm_vector(dEdWf, dfdW, dEdWf);
+		gsl_matrix *dEdWf = gsl_matrix_calloc(lstm->hidden_dim, lstm->input_dim); 
+		
 
 		// add up all the gradients
-		gsl_vector_daxpy(1, dEdWf, dEdWf);
 		add_matrix(dEdWf, 1, context->dEdWf, 1, 0, context->dEdWf) // context->dEdWf += dEdWf
 
 	}
@@ -124,112 +122,55 @@ void bp_dhdo(LSTM *lstm, gsl_vector *out) {
 	sigmoid_vector(lstm->c, out); // out = sigmoid(c)
 }
 
-// these functions don't take any arguments because they just use pre-existing variables inside the lstm as input!
-void bp_dgdW(BP_GATES gate, LSTM *lstm, gsl_matrix *out) {
-	gsl_vector *t1 = gsl_vector_calloc(lstm->hidden_dim);
+void bp_dEdf(LSTM *lstm, gsl_vector *dEdc, gsl_vector *out) {
+	gsl_vector *t1 = gsl_vector_calloc(lstm->hidden_dim);	
 	gsl_vector *t2 = gsl_vector_calloc(lstm->hidden_dim);
 
-	bp_X(gate, lstm, t1); // calculate X
+	bp_X(FORGET, lstm, t1); // calculate X
 	sigmoid_vector(t1, t1); // t1 = sigmoid(X)
 	add_vector(-1, t1, 1, t2); // t2 = 1 - sigmoid(X)
 	hdm_vector(t1, t2, t2); // t2 = sigmoid(X) * (1 - sigmoid(X))
 
-	gsl_matrix *x_matrix = convert_vtm(CblasTrans, lstm->x); // x as a tranposed matrix.
-	gsl_matrix *t_matrix = convert_vtm(CblasNoTrans, t2); // t2 as a tranposed matrix.
-	// we perform matrix multiplication: t_matrix * x_matrix to get our final matrix result
-	gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 0, t_matrix, x_matrix, 0, out); // out = sigmoid(X) * (1 - sigmoid(X)) * x
+	hdm_vector(t2, lstm->cp, t2);
+	hdm_vector(t2, lstm->dEdc, t2);
+	gsl_blas_dcopy(t2, out);
 
 	gsl_vector_free(t1);
 	gsl_vector_free(t2);
 }
 
-void bp_dgdU(BP_GATES gate, LSTM *lstm, gsl_vector *out) {
-	gsl_vector *t1 = gsl_vector_calloc(lstm->hidden_dim);
+void bp_dEdi(LSTM *lstm, gsl_vector *dEdc, gsl_vector *out) {
+	gsl_vector *t1 = gsl_vector_calloc(lstm->hidden_dim);	
 	gsl_vector *t2 = gsl_vector_calloc(lstm->hidden_dim);
 
-	bp_X(gate, lstm, t1); // calculate X
+	bp_X(INPUT, lstm, t1); // calculate X
 	sigmoid_vector(t1, t1); // t1 = sigmoid(X)
 	add_vector(-1, t1, 1, t2); // t2 = 1 - sigmoid(X)
 	hdm_vector(t1, t2, t2); // t2 = sigmoid(X) * (1 - sigmoid(X))
 
-	hdm_vector(lstm->hp, t2, out); // out = sigmoid(X) * (1 - sigmoid(X)) * hp
+	hdm_vector(t2, lstm->ca, t2);
+	hdm_vector(t2, lstm->dEdc, t2);
+	gsl_blas_dcopy(t2, out);
 
 	gsl_vector_free(t1);
 	gsl_vector_free(t2);
 }
 
-void bp_dgdb(BP_GATES gate, LSTM *lstm, gsl_vector *out) {
-	gsl_vector *t1 = gsl_vector_calloc(lstm->hidden_dim);
-	gsl_vector *t2 = gsl_vector_calloc(lstm->hidden_dim);
-
-	bp_X(gate, lstm, t1); // calculate X
-	sech_vector(t1, t1); // t1 = sech(X)
-	hdm_vector(t1, t1, t1); // t1 = sech^2(X)
-	add_vector(-1, t1, 1, t2); // t2 = 1 - sech^2(X)
-	hdm_vector(t1, t2, out); // t2 = sech^2(X) * (1 - sech^2(X))
-
-	gsl_vector_free(t1);
-	gsl_vector_free(t2);
-
-}
-
-void bp_dcadW(LSTM *lstm, gsl_vector *out) {
-	gsl_vector *t1 = gsl_vector_calloc(lstm->hidden_dim);
+void bp_dEdca(LSTM *lstm, gsl_vector *dEdc, gsl_vector *out) {
+	gsl_vector *t1 = gsl_vector_calloc(lstm->hidden_dim);	
 	gsl_vector *t2 = gsl_vector_calloc(lstm->hidden_dim);
 
 	bp_X(CAND, lstm, t1); // calculate X
 	sech_vector(t1, t1); // t1 = sech(X)
 	hdm_vector(t1, t1, t1); // t1 = sech^2(X)
 	add_vector(-1, t1, 1, t2); // t2 = 1 - sech^2(X)
-	hdm_vector(t1, t2, out); // t2 = sech^2(X) * (1 - sech^2(X))
 
-	hdm_vector(lstm->x, t2, out); // out = sech^2(X) * (1 - sech^2(X)) * x
-
-	gsl_vector_free(t1);
-	gsl_vector_free(t2);
-}
-
-void bp_dcadU(LSTM *lstm, gsl_vector *out) {
-	gsl_vector *t1 = gsl_vector_calloc(lstm->hidden_dim);
-	gsl_vector *t2 = gsl_vector_calloc(lstm->hidden_dim);
-
-	bp_X(CAND, lstm, t1); // calculate X
-	sech_vector(t1, t1); // t1 = sech(X)
-	hdm_vector(t1, t1, t1); // t1 = sech^2(X)
-	add_vector(-1, t1, 1, t2); // t2 = 1 - sech^2(X)
-	hdm_vector(t1, t2, out); // t2 = sech^2(X) * (1 - sech^2(X))
-
-	hdm_vector(lstm->hp, t2, out); // out = sech^2(X) * (1 - sech^2(X)) * hp
+	hdm_vector(t2, lstm->i, t2);
+	hdm_vector(t2, lstm->dEdc, t2);
+	gsl_blas_dcopy(t2, out);
 
 	gsl_vector_free(t1);
 	gsl_vector_free(t2);
-}
-
-void bp_dcadb(LSTM *lstm, gsl_vector *out) {
-	gsl_vector *t1 = gsl_vector_calloc(lstm->hidden_dim);
-	gsl_vector *t2 = gsl_vector_calloc(lstm->hidden_dim);
-
-	bp_X(CAND, lstm, t1); // calculate X
-	sech_vector(t1, t1); // t1 = sech(X)
-	hdm_vector(t1, t1, t1); // t1 = sech^2(X)
-	add_vector(-1, t1, 1, t2); // t2 = 1 - sech^2(X)
-	hdm_vector(t1, t2, out); // t2 = sech^2(X) * (1 - sech^2(X))
-
-	gsl_vector_free(t1);
-	gsl_vector_free(t2);
-
-}
-
-void bp_dcdf(LSTM *lstm, gsl_vector *out) {
-	gsl_blas_dcopy(lstm->cp, out);
-}
-
-void bp_dcdi(LSTM *lstm, gsl_vector *out) {
-	gsl_blas_dcopy(lstm->ca, out);
-}
-
-void bp_dcdca(LSTM *lstm, gsl_vector *out) {
-	gsl_blas_dcopy(lstm->i, out);
 }
 
 void bp_tdEdc(int t, LSTM_L *list, gsl_vector **series, gsl_vector *out) {
@@ -335,19 +276,19 @@ BCKPROP_CXT *bp_create_cxt(LSTM *lstm) {
 	BCKPROP_CXT *backprop_context = (BCKPROP_CXT *)malloc(BCKPROP_CXT);
 
 	backprop_context->dEdWf = gsl_matrix_calloc(lstm->hidden_dim, lstm->input_dim);
-	backprop_context->dEdUf = gsl_matrix_calloc(lstm->hidden_dim, lstm->input_dim);
+	backprop_context->dEdUf = gsl_matrix_calloc(lstm->hidden_dim, lstm->hidden_dim);
 	backprop_context->dEdbf = gsl_vector_calloc(lstm->hidden_dim);
 
 	backprop_context->dEdWi = gsl_matrix_calloc(lstm->hidden_dim, lstm->input_dim);
-	backprop_context->dEdUi = gsl_matrix_calloc(lstm->hidden_dim, lstm->input_dim);
+	backprop_context->dEdUi = gsl_matrix_calloc(lstm->hidden_dim, lstm->hidden_dim);
 	backprop_context->dEdbi = gsl_vector_calloc(lstm->hidden_dim);
 
 	backprop_context->dEdWo = gsl_matrix_calloc(lstm->hidden_dim, lstm->input_dim);
-	backprop_context->dEdUo = gsl_matrix_calloc(lstm->hidden_dim, lstm->input_dim);
+	backprop_context->dEdUo = gsl_matrix_calloc(lstm->hidden_dim, lstm->hidden_dim);
 	backprop_context->dEdbo = gsl_vector_calloc(lstm->hidden_dim);
 
 	backprop_context->dEdWc = gsl_matrix_calloc(lstm->hidden_dim, lstm->input_dim);
-	backprop_context->dEdUc = gsl_matrix_calloc(lstm->hidden_dim, lstm->input_dim);
+	backprop_context->dEdUc = gsl_matrix_calloc(lstm->hidden_dim, lstm->hidden_dim);
 	backprop_context->dEdbc = gsl_vector_calloc(lstm->hidden_dim);
 
 	return backprop_context;
