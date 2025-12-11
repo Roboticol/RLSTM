@@ -208,10 +208,10 @@ gsl_matrix *convert_vtm(CBLAS_TRANSPOSE_t trans, gsl_vector *v) {
 
 	switch (trans) {
 		case CblasNoTrans:
-			m = gsl_matrix_calloc(v, 1);
+			m = gsl_matrix_calloc(v->size, 1);
 			break;
 		case CblasTrans:
-			m = gsl_matrix_calloc(1, v);
+			m = gsl_matrix_calloc(1, v->size);
 			break;
 		default:
 			printf("Invalid option\n");
@@ -224,7 +224,7 @@ gsl_matrix *convert_vtm(CBLAS_TRANSPOSE_t trans, gsl_vector *v) {
 				gsl_matrix_set(m, i, 1, gsl_vector_get(v, i));
 				break;
 			case CblasTrans:
-				gsl_matrix_set(m, 1, v, gsl_vector_get(v, i));
+				gsl_matrix_set(m, 1, i, gsl_vector_get(v, i));
 				break;
 			default:
 				break;

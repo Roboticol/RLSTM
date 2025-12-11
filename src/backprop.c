@@ -22,17 +22,14 @@ void bp_series_lstm(LSTM *lstm, gsl_vector **series, int n) {
 		bp_tdEdc(i, list, series, dEdc);
 
 		gsl_vector *dcdf = gsl_vector_calloc(lstm->hidden_dim);
-		bp_dcdf(lstm, dcdf);
 		
-		gsl_matrix *dfdW = gsl_vector_calloc(lstm->hidden_dim, input_dim);
-		bp_dgdW(FORGET, lstm, dfdW);
+		gsl_matrix *dfdW = gsl_matrix_calloc(lstm->hidden_dim, lstm->input_dim);
 
 		// calculate the final dEdWft, gradient loss w.r.t weight of forget gate.
 		gsl_matrix *dEdWf = gsl_matrix_calloc(lstm->hidden_dim, lstm->input_dim); 
 		
 
 		// add up all the gradients
-		add_matrix(dEdWf, 1, context->dEdWf, 1, 0, context->dEdWf) // context->dEdWf += dEdWf
 
 	}
 
@@ -132,7 +129,7 @@ void bp_dEdf(LSTM *lstm, gsl_vector *dEdc, gsl_vector *out) {
 	hdm_vector(t1, t2, t2); // t2 = sigmoid(X) * (1 - sigmoid(X))
 
 	hdm_vector(t2, lstm->cp, t2);
-	hdm_vector(t2, lstm->dEdc, t2);
+	hdm_vector(t2, dEdc, t2);
 	gsl_blas_dcopy(t2, out);
 
 	gsl_vector_free(t1);
@@ -149,7 +146,7 @@ void bp_dEdi(LSTM *lstm, gsl_vector *dEdc, gsl_vector *out) {
 	hdm_vector(t1, t2, t2); // t2 = sigmoid(X) * (1 - sigmoid(X))
 
 	hdm_vector(t2, lstm->ca, t2);
-	hdm_vector(t2, lstm->dEdc, t2);
+	hdm_vector(t2, dEdc, t2);
 	gsl_blas_dcopy(t2, out);
 
 	gsl_vector_free(t1);
@@ -166,7 +163,7 @@ void bp_dEdca(LSTM *lstm, gsl_vector *dEdc, gsl_vector *out) {
 	add_vector(-1, t1, 1, t2); // t2 = 1 - sech^2(X)
 
 	hdm_vector(t2, lstm->i, t2);
-	hdm_vector(t2, lstm->dEdc, t2);
+	hdm_vector(t2, dEdc, t2);
 	gsl_blas_dcopy(t2, out);
 
 	gsl_vector_free(t1);
@@ -273,7 +270,7 @@ void bp_lbg(BP_GATES gate, LSTM *lstm, gsl_vector *p) {
 
 BCKPROP_CXT *bp_create_cxt(LSTM *lstm) {
 	// allocate different matrix and vector gradients
-	BCKPROP_CXT *backprop_context = (BCKPROP_CXT *)malloc(BCKPROP_CXT);
+	BCKPROP_CXT *backprop_context = (BCKPROP_CXT *)malloc(sizeof(BCKPROP_CXT));
 
 	backprop_context->dEdWf = gsl_matrix_calloc(lstm->hidden_dim, lstm->input_dim);
 	backprop_context->dEdUf = gsl_matrix_calloc(lstm->hidden_dim, lstm->hidden_dim);
@@ -298,19 +295,19 @@ void bp_delete_cxt(BCKPROP_CXT *cxt) {
 	// free all resources from backprop context
 	gsl_matrix_free(cxt->dEdWf);
 	gsl_matrix_free(cxt->dEdUf);
-	gsl_matrix_free(cxt->dEdbf);
+	gsl_vector_free(cxt->dEdbf);
 
 	gsl_matrix_free(cxt->dEdWi);
 	gsl_matrix_free(cxt->dEdUi);
-	gsl_matrix_free(cxt->dEdbi);
+	gsl_vector_free(cxt->dEdbi);
 
 	gsl_matrix_free(cxt->dEdWo);
 	gsl_matrix_free(cxt->dEdUo);
-	gsl_matrix_free(cxt->dEdbo);
+	gsl_vector_free(cxt->dEdbo);
 
 	gsl_matrix_free(cxt->dEdWc);
 	gsl_matrix_free(cxt->dEdUc);
-	gsl_matrix_free(cxt->dEdbc);
+	gsl_vector_free(cxt->dEdbc);
 	
 	free(cxt);
 }

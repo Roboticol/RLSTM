@@ -52,20 +52,20 @@ typedef enum {W, U, b} BP_PARA;
 
 // a struct for the "context" of our backpropagation algorithm, it stores values like total error, total gradient loss wrt all parameters of the lstm, etc.
 typedef struct {   
-	gsl_vector *dEdWf;
-	gsl_vector *dEdUf;
+	gsl_matrix *dEdWf;
+	gsl_matrix *dEdUf;
 	gsl_vector *dEdbf;
 
-	gsl_vector *dEdWi;
-	gsl_vector *dEdUi;
+	gsl_matrix *dEdWi;
+	gsl_matrix *dEdUi;
 	gsl_vector *dEdbi;
 
-	gsl_vector *dEdWo;
-	gsl_vector *dEdUo;
+	gsl_matrix *dEdWo;
+	gsl_matrix *dEdUo;
 	gsl_vector *dEdbo;
 
-	gsl_vector *dEdWc;
-	gsl_vector *dEdUc;
+	gsl_matrix *dEdWc;
+	gsl_matrix *dEdUc;
 	gsl_vector *dEdbc;
 } BCKPROP_CXT;
 
