@@ -22,6 +22,7 @@ First, ensure that the [Gnu Scientific Library](https://mirrors.ustc.edu.cn/gnu/
 Install MSYS2 first from [here](https://www.msys2.org). Then,
 ```pacman -S mingw-w64-x86_64-gsl```
 
+### Running:
 Now to run the program, all you have to do is go to the root folder and run this command:
 
 ```make && ./build/main```
