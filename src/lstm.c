@@ -430,7 +430,7 @@ void lstml_insert(LSTM_L *list, LSTM *lstm, int index) {
 }
 
 void lstml_remove(LSTM_L *list, int index) {
-	list->data[index] = nullptr; // delete lstm pointer from list
+	list->data[index] = NULL; // delete lstm pointer from list
 	
 	// move all the lstm pointers right of index to the left
 	for (int i = index; i < list->size - 1; i++) {
